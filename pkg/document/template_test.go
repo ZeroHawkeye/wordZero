@@ -2,6 +2,7 @@
 package document
 
 import (
+	"os"
 	"strings"
 	"testing"
 )
@@ -1016,4 +1017,210 @@ func TestHeaderFooterVariableReplacement(t *testing.T) {
 	if !footerReplaced {
 		t.Error("页脚中的变量应该被替换")
 	}
+}
+
+// TestTemplateDocumentPartsPreservation 测试模板渲染时文档部件的完整保留
+func TestTemplateDocumentPartsPreservation(t *testing.T) {
+	// 创建包含多种文档部件的源文档
+	doc := New()
+
+	// 添加页眉和页脚
+	err := doc.AddHeader(HeaderFooterTypeDefault, "Template Header - {{headerVar}}")
+	if err != nil {
+		t.Fatalf("添加页眉失败: %v", err)
+	}
+
+	err = doc.AddFooter(HeaderFooterTypeDefault, "Template Footer - {{footerVar}}")
+	if err != nil {
+		t.Fatalf("添加页脚失败: %v", err)
+	}
+
+	// 设置页面设置
+	settings := DefaultPageSettings()
+	settings.Size = PageSizeA4
+	settings.Orientation = OrientationPortrait
+	err = doc.SetPageSettings(settings)
+	if err != nil {
+		t.Fatalf("设置页面设置失败: %v", err)
+	}
+
+	// 添加标题和内容
+	doc.AddHeadingParagraph("{{docTitle}}", 1)
+	doc.AddParagraph("Content with {{variable1}} and more text.")
+
+	// 保存原文档
+	originalPath := "test_parts_preservation_original.docx"
+	err = doc.Save(originalPath)
+	if err != nil {
+		t.Fatalf("保存原文档失败: %v", err)
+	}
+	defer func() {
+		if err := os.Remove(originalPath); err != nil {
+			t.Logf("清理原文档失败: %v", err)
+		}
+	}()
+
+	// 打开原文档作为模板
+	templateDoc, err := Open(originalPath)
+	if err != nil {
+		t.Fatalf("打开模板文档失败: %v", err)
+	}
+
+	// 记录原文档的parts
+	originalParts := make(map[string]bool)
+	for partName := range templateDoc.parts {
+		originalParts[partName] = true
+	}
+
+	// 创建模板引擎并加载模板
+	engine := NewTemplateEngine()
+	_, err = engine.LoadTemplateFromDocument("parts_test", templateDoc)
+	if err != nil {
+		t.Fatalf("加载模板失败: %v", err)
+	}
+
+	// 渲染模板
+	data := NewTemplateData()
+	data.SetVariable("headerVar", "Header Value")
+	data.SetVariable("footerVar", "Footer Value")
+	data.SetVariable("docTitle", "Document Title")
+	data.SetVariable("variable1", "Variable 1 Value")
+
+	renderedDoc, err := engine.RenderTemplateToDocument("parts_test", data)
+	if err != nil {
+		t.Fatalf("渲染模板失败: %v", err)
+	}
+
+	// 保存渲染后的文档
+	renderedPath := "test_parts_preservation_rendered.docx"
+	err = renderedDoc.Save(renderedPath)
+	if err != nil {
+		t.Fatalf("保存渲染后的文档失败: %v", err)
+	}
+	defer func() {
+		if err := os.Remove(renderedPath); err != nil {
+			t.Logf("清理渲染文档失败: %v", err)
+		}
+	}()
+
+	// 检查渲染后文档的parts
+	renderedParts := make(map[string]bool)
+	for partName := range renderedDoc.parts {
+		renderedParts[partName] = true
+	}
+
+	// 验证关键部件被保留
+	criticalParts := []string{
+		"word/styles.xml",
+		"word/header1.xml",
+		"word/footer1.xml",
+	}
+
+	for _, part := range criticalParts {
+		if originalParts[part] && !renderedParts[part] {
+			t.Errorf("关键部件 %s 在原文档中存在但在渲染后的文档中丢失", part)
+		}
+	}
+
+	// 验证页眉页脚变量被替换
+	headerContent := string(renderedDoc.parts["word/header1.xml"])
+	if strings.Contains(headerContent, "{{headerVar}}") {
+		t.Error("页眉中的变量应该被替换")
+	}
+	if !strings.Contains(headerContent, "Header Value") {
+		t.Error("页眉中应该包含替换后的值")
+	}
+
+	footerContent := string(renderedDoc.parts["word/footer1.xml"])
+	if strings.Contains(footerContent, "{{footerVar}}") {
+		t.Error("页脚中的变量应该被替换")
+	}
+	if !strings.Contains(footerContent, "Footer Value") {
+		t.Error("页脚中应该包含替换后的值")
+	}
+
+	t.Log("文档部件保留测试通过")
+}
+
+// TestTemplateSectionPropertiesPreservation 测试节属性在模板渲染时的保留
+func TestTemplateSectionPropertiesPreservation(t *testing.T) {
+	// 创建包含节属性的源文档
+	doc := New()
+
+	// 设置页面设置（这会创建SectionProperties）
+	settings := DefaultPageSettings()
+	settings.Size = PageSizeA4
+	settings.MarginTop = 30.0
+	settings.MarginBottom = 25.0
+	settings.MarginLeft = 20.0
+	settings.MarginRight = 20.0
+	err := doc.SetPageSettings(settings)
+	if err != nil {
+		t.Fatalf("设置页面设置失败: %v", err)
+	}
+
+	// 添加内容
+	doc.AddParagraph("Content with {{variable}}")
+
+	// 保存原文档
+	originalPath := "test_section_props_original.docx"
+	err = doc.Save(originalPath)
+	if err != nil {
+		t.Fatalf("保存原文档失败: %v", err)
+	}
+	defer func() {
+		if err := os.Remove(originalPath); err != nil {
+			t.Logf("清理原文档失败: %v", err)
+		}
+	}()
+
+	// 打开原文档作为模板
+	templateDoc, err := Open(originalPath)
+	if err != nil {
+		t.Fatalf("打开模板文档失败: %v", err)
+	}
+
+	// 获取原文档的页面设置
+	originalSettings := templateDoc.GetPageSettings()
+
+	// 创建模板引擎并加载模板
+	engine := NewTemplateEngine()
+	_, err = engine.LoadTemplateFromDocument("section_test", templateDoc)
+	if err != nil {
+		t.Fatalf("加载模板失败: %v", err)
+	}
+
+	// 渲染模板
+	data := NewTemplateData()
+	data.SetVariable("variable", "Value")
+
+	renderedDoc, err := engine.RenderTemplateToDocument("section_test", data)
+	if err != nil {
+		t.Fatalf("渲染模板失败: %v", err)
+	}
+
+	// 获取渲染后文档的页面设置
+	renderedSettings := renderedDoc.GetPageSettings()
+
+	// 验证页面设置被保留
+	if renderedSettings.Size != originalSettings.Size {
+		t.Errorf("页面大小不匹配: 期望 %v, 实际 %v", originalSettings.Size, renderedSettings.Size)
+	}
+
+	// 允许1mm的误差
+	tolerance := 1.0
+	if abs(renderedSettings.MarginTop-originalSettings.MarginTop) > tolerance {
+		t.Errorf("上边距不匹配: 期望 %.1f, 实际 %.1f", originalSettings.MarginTop, renderedSettings.MarginTop)
+	}
+	if abs(renderedSettings.MarginBottom-originalSettings.MarginBottom) > tolerance {
+		t.Errorf("下边距不匹配: 期望 %.1f, 实际 %.1f", originalSettings.MarginBottom, renderedSettings.MarginBottom)
+	}
+	if abs(renderedSettings.MarginLeft-originalSettings.MarginLeft) > tolerance {
+		t.Errorf("左边距不匹配: 期望 %.1f, 实际 %.1f", originalSettings.MarginLeft, renderedSettings.MarginLeft)
+	}
+	if abs(renderedSettings.MarginRight-originalSettings.MarginRight) > tolerance {
+		t.Errorf("右边距不匹配: 期望 %.1f, 实际 %.1f", originalSettings.MarginRight, renderedSettings.MarginRight)
+	}
+
+	t.Log("节属性保留测试通过")
 }

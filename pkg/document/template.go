@@ -849,6 +849,10 @@ func (te *TemplateEngine) cloneDocument(source *Document) *Document {
 			clonedTable := te.cloneTable(elem)
 			doc.Body.Elements = append(doc.Body.Elements, clonedTable)
 
+		case *SectionProperties:
+			clonedSectPr := te.cloneSectionProperties(elem)
+			doc.Body.Elements = append(doc.Body.Elements, clonedSectPr)
+
 		default:
 			// 其他类型暂时直接复制引用
 			doc.Body.Elements = append(doc.Body.Elements, element)
@@ -862,16 +866,11 @@ func (te *TemplateEngine) cloneDocument(source *Document) *Document {
 		// 如需统一行距，请在模板中显式设置，而非由代码层面硬编码。
 	}
 
-	// 复制 styles.xml 等样式相关部件，确保 docDefaults 等信息完整保留
+	// 复制所有文档部件，确保完整保留原文档结构
 	if doc.parts == nil {
 		doc.parts = make(map[string][]byte)
 	}
-	if data, ok := source.parts["word/styles.xml"]; ok {
-		doc.parts["word/styles.xml"] = data
-	}
-
-	// 复制页眉页脚部件
-	te.cloneHeaderFooterParts(source, doc)
+	te.cloneAllDocumentParts(source, doc)
 
 	// 复制文档关系（包含页眉页脚引用）
 	if source.documentRelationships != nil {
@@ -893,10 +892,117 @@ func (te *TemplateEngine) cloneDocument(source *Document) *Document {
 		copy(doc.contentTypes.Overrides, source.contentTypes.Overrides)
 	}
 
+	// 复制图片ID计数器
+	doc.nextImageID = source.nextImageID
+
 	return doc
 }
 
-// cloneHeaderFooterParts 复制页眉页脚部件
+// cloneAllDocumentParts 复制所有文档部件，确保完整保留原文档结构
+func (te *TemplateEngine) cloneAllDocumentParts(source, dest *Document) {
+	if source.parts == nil {
+		return
+	}
+
+	for partName, partData := range source.parts {
+		// 跳过 word/document.xml 因为它会在保存时重新生成
+		if partName == "word/document.xml" {
+			continue
+		}
+
+		// 复制部件数据
+		dest.parts[partName] = make([]byte, len(partData))
+		copy(dest.parts[partName], partData)
+	}
+}
+
+// cloneSectionProperties 深度复制节属性
+func (te *TemplateEngine) cloneSectionProperties(source *SectionProperties) *SectionProperties {
+	if source == nil {
+		return nil
+	}
+
+	sectPr := &SectionProperties{
+		XmlnsR: source.XmlnsR,
+	}
+
+	// 复制页面尺寸
+	if source.PageSize != nil {
+		sectPr.PageSize = &PageSizeXML{
+			W:      source.PageSize.W,
+			H:      source.PageSize.H,
+			Orient: source.PageSize.Orient,
+		}
+	}
+
+	// 复制页面边距
+	if source.PageMargins != nil {
+		sectPr.PageMargins = &PageMargin{
+			Top:    source.PageMargins.Top,
+			Right:  source.PageMargins.Right,
+			Bottom: source.PageMargins.Bottom,
+			Left:   source.PageMargins.Left,
+			Header: source.PageMargins.Header,
+			Footer: source.PageMargins.Footer,
+			Gutter: source.PageMargins.Gutter,
+		}
+	}
+
+	// 复制分栏设置
+	if source.Columns != nil {
+		sectPr.Columns = &Columns{
+			Space: source.Columns.Space,
+			Num:   source.Columns.Num,
+		}
+	}
+
+	// 复制页眉引用
+	if source.HeaderReferences != nil {
+		sectPr.HeaderReferences = make([]*HeaderFooterReference, len(source.HeaderReferences))
+		for i, ref := range source.HeaderReferences {
+			sectPr.HeaderReferences[i] = &HeaderFooterReference{
+				Type: ref.Type,
+				ID:   ref.ID,
+			}
+		}
+	}
+
+	// 复制页脚引用
+	if source.FooterReferences != nil {
+		sectPr.FooterReferences = make([]*FooterReference, len(source.FooterReferences))
+		for i, ref := range source.FooterReferences {
+			sectPr.FooterReferences[i] = &FooterReference{
+				Type: ref.Type,
+				ID:   ref.ID,
+			}
+		}
+	}
+
+	// 复制首页不同设置
+	if source.TitlePage != nil {
+		sectPr.TitlePage = &TitlePage{}
+	}
+
+	// 复制页码类型
+	if source.PageNumType != nil {
+		sectPr.PageNumType = &PageNumType{
+			Fmt: source.PageNumType.Fmt,
+		}
+	}
+
+	// 复制文档网格
+	if source.DocGrid != nil {
+		sectPr.DocGrid = &DocGrid{
+			Type:      source.DocGrid.Type,
+			LinePitch: source.DocGrid.LinePitch,
+			CharSpace: source.DocGrid.CharSpace,
+		}
+	}
+
+	return sectPr
+}
+
+// cloneHeaderFooterParts 复制页眉页脚部件 (保留以兼容旧代码，现在由cloneAllDocumentParts处理)
 func (te *TemplateEngine) cloneHeaderFooterParts(source, dest *Document) {
 	if source.parts == nil {
 		return
