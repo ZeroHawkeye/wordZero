@@ -414,7 +414,7 @@ para.SetParagraphFormat(&document.ParagraphFormatConfig{
 - **章节管理** - 使用段前分页实现章节的页面独立性
 
 ### 段落内容操作
-- [`AddFormattedText(text string, format *TextFormat)`](document.go) - 添加格式化文本（支持粗体、斜体、下划线、删除线、高亮等格式）
+- [`AddFormattedText(text string, format *TextFormat)`](document.go) - 添加格式化文本（支持粗体、斜体、下划线、删除线、高亮、字体大小、字体颜色、字体名称等格式）
 - [`ElementType()`](document.go) - 获取段落元素类型
 
 ## 文档主体操作方法
