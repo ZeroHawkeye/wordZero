@@ -417,6 +417,30 @@ func (d *Document) AddImageFromFile(filePath string, config *ImageConfig) (*Imag
 	return d.AddImageFromData(imageData, fileName, format, width, height, config)
 }
 
+// generateSafeImageFileName 生成安全的图片文件名
+// 将非ASCII字符的文件名转换为安全的ASCII文件名，以确保Microsoft Word兼容性
+func generateSafeImageFileName(imageID int, originalFileName string, format ImageFormat) string {
+	// 获取文件扩展名
+	ext := filepath.Ext(originalFileName)
+	if ext == "" {
+		// 如果没有扩展名，根据格式添加
+		switch format {
+		case ImageFormatPNG:
+			ext = ".png"
+		case ImageFormatJPEG:
+			ext = ".jpeg"
+		case ImageFormatGIF:
+			ext = ".gif"
+		default:
+			ext = ".png"
+		}
+	}
+
+	// 使用图片ID生成安全的文件名
+	safeFileName := fmt.Sprintf("image%d%s", imageID, ext)
+	return safeFileName
+}
+
 // AddImageFromData 从数据添加图片到文档
 func (d *Document) AddImageFromData(imageData []byte, fileName string, format ImageFormat, width, height int, config *ImageConfig) (*ImageInfo, error) {
 	if d.documentRelationships == nil {
@@ -430,21 +454,24 @@ func (d *Document) AddImageFromData(imageData []byte, fileName string, format Im
 	imageID := d.nextImageID
 	d.nextImageID++ // 递增计数器
 
+	// 生成安全的文件名（避免中文等非ASCII字符导致Word打开错误）
+	safeFileName := generateSafeImageFileName(imageID, fileName, format)
+
 	// 生成关系ID，注意：rId1保留给styles.xml，图片从rId2开始
 	relationID := fmt.Sprintf("rId%d", len(d.documentRelationships.Relationships)+2)
 
-	// 添加图片关系
+	// 添加图片关系，使用安全文件名
 	d.documentRelationships.Relationships = append(d.documentRelationships.Relationships, Relationship{
 		ID:     relationID,
 		Type:   "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
-		Target: fmt.Sprintf("media/%s", fileName),
+		Target: fmt.Sprintf("media/%s", safeFileName),
 	})
 
-	// 存储图片数据
+	// 存储图片数据，使用安全文件名
 	if d.parts == nil {
 		d.parts = make(map[string][]byte)
 	}
-	d.parts[fmt.Sprintf("word/media/%s", fileName)] = imageData
+	d.parts[fmt.Sprintf("word/media/%s", safeFileName)] = imageData
 
 	// 更新内容类型
 	d.addImageContentType(format)
@@ -481,21 +508,24 @@ func (d *Document) AddImageFromDataWithoutElement(imageData []byte, fileName str
 	imageID := d.nextImageID
 	d.nextImageID++ // 递增计数器
 
+	// 生成安全的文件名（避免中文等非ASCII字符导致Word打开错误）
+	safeFileName := generateSafeImageFileName(imageID, fileName, format)
+
 	// 生成关系ID，注意：rId1保留给styles.xml，图片从rId2开始
 	relationID := fmt.Sprintf("rId%d", len(d.documentRelationships.Relationships)+2)
 
-	// 添加图片关系
+	// 添加图片关系，使用安全文件名
 	d.documentRelationships.Relationships = append(d.documentRelationships.Relationships, Relationship{
 		ID:     relationID,
 		Type:   "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
-		Target: fmt.Sprintf("media/%s", fileName),
+		Target: fmt.Sprintf("media/%s", safeFileName),
 	})
 
-	// 存储图片数据
+	// 存储图片数据，使用安全文件名
 	if d.parts == nil {
 		d.parts = make(map[string][]byte)
 	}
-	d.parts[fmt.Sprintf("word/media/%s", fileName)] = imageData
+	d.parts[fmt.Sprintf("word/media/%s", safeFileName)] = imageData
 
 	// 更新内容类型
 	d.addImageContentType(format)

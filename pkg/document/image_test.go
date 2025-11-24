@@ -219,8 +219,8 @@ func TestAddImageFromData(t *testing.T) {
 		t.Errorf("期望1个关系，得到 %d", len(doc.documentRelationships.Relationships))
 	}
 
-	// 验证图片数据是否存储
-	if _, exists := doc.parts["word/media/test.png"]; !exists {
+	// 验证图片数据是否存储（现在使用安全的文件名 image0.png）
+	if _, exists := doc.parts["word/media/image0.png"]; !exists {
 		t.Error("图片数据未正确存储")
 	}
 

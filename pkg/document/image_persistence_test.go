@@ -18,7 +18,7 @@ func TestImagePersistenceAfterOpenAndSave(t *testing.T) {
 	// 创建测试图片
 	imageData := createTestImageForPersistence(100, 75, color.RGBA{255, 100, 100, 255})
 	
-	// 添加图片
+	// 添加图片（文件名会被自动转换为安全的image0.png）
 	imageInfo, err := doc1.AddImageFromData(
 		imageData,
 		"test_image.png",
@@ -45,8 +45,8 @@ func TestImagePersistenceAfterOpenAndSave(t *testing.T) {
 	}
 	defer os.Remove(testFile1)
 	
-	// 验证第一个文档中包含图片数据
-	if _, exists := doc1.parts["word/media/test_image.png"]; !exists {
+	// 验证第一个文档中包含图片数据（使用安全文件名image0.png）
+	if _, exists := doc1.parts["word/media/image0.png"]; !exists {
 		t.Fatal("第一个文档中没有找到图片数据")
 	}
 	
@@ -57,7 +57,7 @@ func TestImagePersistenceAfterOpenAndSave(t *testing.T) {
 	}
 	
 	// 验证打开的文档包含图片数据
-	if _, exists := doc2.parts["word/media/test_image.png"]; !exists {
+	if _, exists := doc2.parts["word/media/image0.png"]; !exists {
 		t.Fatal("打开的文档中没有找到图片数据")
 	}
 	
@@ -91,7 +91,7 @@ func TestImagePersistenceAfterOpenAndSave(t *testing.T) {
 	}
 	
 	// 验证图片数据仍然存在
-	if _, exists := doc3.parts["word/media/test_image.png"]; !exists {
+	if _, exists := doc3.parts["word/media/image0.png"]; !exists {
 		t.Fatal("【问题】第二个文档中没有找到图片数据 - 图片在保存后丢失！")
 	}
 	
@@ -109,8 +109,8 @@ func TestImagePersistenceAfterOpenAndSave(t *testing.T) {
 	}
 	
 	// 验证图片数据完整性
-	originalImageData := doc1.parts["word/media/test_image.png"]
-	finalImageData := doc3.parts["word/media/test_image.png"]
+	originalImageData := doc1.parts["word/media/image0.png"]
+	finalImageData := doc3.parts["word/media/image0.png"]
 	
 	if !bytes.Equal(originalImageData, finalImageData) {
 		t.Fatal("图片数据在保存和重新打开后发生了变化")
@@ -127,7 +127,7 @@ func TestAddImageToOpenedDocument(t *testing.T) {
 	doc1 := New()
 	doc1.AddParagraph("原始文档")
 	
-	// 添加第一张图片（红色）
+	// 添加第一张图片（红色）- 将被保存为image0.png
 	imageData1 := createTestImageForPersistence(100, 75, color.RGBA{255, 0, 0, 255})
 	_, err := doc1.AddImageFromData(
 		imageData1,
@@ -159,7 +159,7 @@ func TestAddImageToOpenedDocument(t *testing.T) {
 	
 	doc2.AddParagraph("添加第二张图片")
 	
-	// 添加第二张图片（蓝色）
+	// 添加第二张图片（蓝色）- 将被保存为image1.png
 	imageData2 := createTestImageForPersistence(100, 75, color.RGBA{0, 0, 255, 255})
 	_, err = doc2.AddImageFromData(
 		imageData2,
@@ -189,12 +189,12 @@ func TestAddImageToOpenedDocument(t *testing.T) {
 		t.Fatalf("打开包含两张图片的文档失败: %v", err)
 	}
 	
-	// 验证两张图片数据都存在
-	if _, exists := doc3.parts["word/media/image1.png"]; !exists {
+	// 验证两张图片数据都存在（现在使用安全文件名image0.png和image1.png）
+	if _, exists := doc3.parts["word/media/image0.png"]; !exists {
 		t.Fatal("【问题】第一张图片数据丢失")
 	}
 	
-	if _, exists := doc3.parts["word/media/image2.png"]; !exists {
+	if _, exists := doc3.parts["word/media/image1.png"]; !exists {
 		t.Fatal("【问题】第二张图片数据丢失")
 	}
 	
@@ -220,7 +220,7 @@ func TestImageIDCounterAfterOpen(t *testing.T) {
 	doc1 := New()
 	doc1.AddParagraph("测试图片ID计数器")
 	
-	// 添加两张图片
+	// 添加两张图片（将被保存为image0.png和image1.png）
 	imageData := createTestImageForPersistence(50, 50, color.RGBA{255, 0, 0, 255})
 	
 	_, err := doc1.AddImageFromData(imageData, "img1.png", ImageFormatPNG, 50, 50, nil)
@@ -275,8 +275,8 @@ func TestImageIDCounterAfterOpen(t *testing.T) {
 		t.Fatalf("打开包含三张图片的文档失败: %v", err)
 	}
 	
-	// 验证三张图片都存在
-	images := []string{"img1.png", "img2.png", "img3.png"}
+	// 验证三张图片都存在（使用安全文件名image0.png, image1.png, image2.png）
+	images := []string{"image0.png", "image1.png", "image2.png"}
 	for _, imgName := range images {
 		if _, exists := doc3.parts["word/media/"+imgName]; !exists {
 			t.Fatalf("【问题】图片 %s 丢失", imgName)
