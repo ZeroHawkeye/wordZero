@@ -14,6 +14,11 @@ type SDT struct {
 	Content    *SDTContent    `xml:"w:sdtContent"`
 }
 
+// ElementType 返回SDT元素类型
+func (s *SDT) ElementType() string {
+	return "sdt"
+}
+
 // SDTProperties SDT属性
 type SDTProperties struct {
 	XMLName     xml.Name        `xml:"w:sdtPr"`
@@ -99,11 +104,6 @@ type DocPart struct {
 // Tab 制表符
 type Tab struct {
 	XMLName xml.Name `xml:"w:tab"`
-}
-
-// 实现BodyElement接口
-func (s *SDT) ElementType() string {
-	return "sdt"
 }
 
 // CreateTOCSDT 创建目录SDT结构

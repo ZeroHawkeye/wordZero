@@ -103,25 +103,88 @@ func (d *Document) GenerateTOC(config *TOCConfig) error {
 
 // UpdateTOC 更新目录
 func (d *Document) UpdateTOC() error {
-	// 重新收集标题信息
-	entries := d.collectHeadings(9) // 收集所有级别
-
-	// 查找现有目录
-	tocStart := d.findTOCStart()
-	if tocStart == -1 {
-		return fmt.Errorf("未找到目录")
-	}
-
-	// 删除现有目录条目
-	d.removeTOCEntries(tocStart)
-
-	// 重新生成目录条目
-	config := DefaultTOCConfig()
-	for _, entry := range entries {
-		if err := d.addTOCEntry(entry, config); err != nil {
-			return fmt.Errorf("更新目录条目失败: %v", err)
+	// 查找现有目录SDT
+	tocSDT, tocIndex := d.findTOCSDT()
+	if tocSDT == nil {
+		// 如果没有找到SDT类型的TOC，尝试查找段落类型的TOC
+		tocStart := d.findTOCStart()
+		if tocStart == -1 {
+			return fmt.Errorf("未找到目录")
 		}
+
+		// 删除现有目录条目
+		d.removeTOCEntries(tocStart)
+
+		// 重新生成目录条目
+		config := DefaultTOCConfig()
+		entries := d.collectHeadings(config.MaxLevel)
+		for _, entry := range entries {
+			if err := d.addTOCEntry(entry, config); err != nil {
+				return fmt.Errorf("更新目录条目失败: %v", err)
+			}
+		}
+		return nil
 	}
+
+	// 处理SDT类型的TOC
+	// 从TOC配置中获取MaxLevel，默认为3
+	config := DefaultTOCConfig()
+	if tocSDT.Properties != nil && tocSDT.Properties.DocPartObj != nil {
+		// 可以从SDT属性中提取配置，这里使用默认配置
+		config = DefaultTOCConfig()
+	}
+
+	// 重新收集标题信息
+	entries := d.collectHeadings(config.MaxLevel)
+
+	// 清空SDT内容并重建
+	tocSDT.Content.Elements = []interface{}{}
+
+	// 添加目录标题段落
+	titlePara := &Paragraph{
+		Properties: &ParagraphProperties{
+			Spacing: &Spacing{
+				Before: "0",
+				After:  "0",
+				Line:   "240",
+			},
+			Indentation: &Indentation{
+				Left:      "0",
+				Right:     "0",
+				FirstLine: "0",
+			},
+			Justification: &Justification{Val: "center"},
+		},
+		Runs: []Run{
+			{
+				Text: Text{Content: config.Title},
+				Properties: &RunProperties{
+					FontFamily: &FontFamily{ASCII: "宋体"},
+					FontSize:   &FontSize{Val: "21"},
+				},
+			},
+		},
+	}
+
+	// 添加书签开始
+	bookmarkStart := &BookmarkStart{
+		ID:   "0",
+		Name: "_Toc11693_WPSOffice_Type3",
+	}
+
+	tocSDT.Content.Elements = append(tocSDT.Content.Elements, bookmarkStart, titlePara)
+
+	// 为每个标题条目添加到目录中
+	for i, entry := range entries {
+		entryID := fmt.Sprintf("14746%d", 3000+i)
+		tocSDT.AddTOCEntry(entry.Text, entry.Level, entry.PageNum, entryID)
+	}
+
+	// 完成目录SDT构建
+	tocSDT.FinalizeTOCSDT()
+
+	// 更新文档中的SDT
+	d.Body.Elements[tocIndex] = tocSDT
 
 	return nil
 }
@@ -422,6 +485,23 @@ func (d *Document) findTOCStart() int {
 		}
 	}
 	return -1
+}
+
+// findTOCSDT 查找目录SDT结构
+func (d *Document) findTOCSDT() (*SDT, int) {
+	for i, element := range d.Body.Elements {
+		if sdt, ok := element.(*SDT); ok {
+			// 检查是否是目录SDT
+			if sdt.Properties != nil && sdt.Properties.DocPartObj != nil {
+				if sdt.Properties.DocPartObj.DocPartGallery != nil {
+					if sdt.Properties.DocPartObj.DocPartGallery.Val == "Table of Contents" {
+						return sdt, i
+					}
+				}
+			}
+		}
+	}
+	return nil, -1
 }
 
 // removeTOCEntries 删除现有目录条目
