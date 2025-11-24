@@ -15,13 +15,13 @@ func assertParagraphContent(t *testing.T, paragraphs []*Paragraph, index int, ex
 		t.Errorf("段落索引 %d 超出范围，总共只有 %d 个段落", index, len(paragraphs))
 		return
 	}
-	
+
 	para := paragraphs[index]
 	if len(para.Runs) == 0 {
 		t.Errorf("索引 %d 的段落没有任何运行（Runs）", index)
 		return
 	}
-	
+
 	actualContent := para.Runs[0].Text.Content
 	if actualContent != expectedContent {
 		t.Errorf("索引 %d 的段落内容应该是'%s'，实际是'%s'", index, expectedContent, actualContent)
@@ -961,21 +961,21 @@ func TestDocumentOpenFromMemory(t *testing.T) {
 // TestAddPageBreak 测试添加分页符功能
 func TestAddPageBreak(t *testing.T) {
 	doc := New()
-	
+
 	// 添加第一页内容
 	doc.AddParagraph("第一页内容")
-	
+
 	// 添加分页符
 	doc.AddPageBreak()
-	
+
 	// 添加第二页内容
 	doc.AddParagraph("第二页内容")
-	
+
 	// 验证文档包含3个元素（段落、分页符段落、段落）
 	if len(doc.Body.Elements) != 3 {
 		t.Errorf("期望文档包含3个元素，实际包含 %d 个", len(doc.Body.Elements))
 	}
-	
+
 	// 验证第二个元素是包含分页符的段落
 	if p, ok := doc.Body.Elements[1].(*Paragraph); ok {
 		if len(p.Runs) == 0 || p.Runs[0].Break == nil {
@@ -986,16 +986,16 @@ func TestAddPageBreak(t *testing.T) {
 	} else {
 		t.Error("第二个元素应该是段落类型")
 	}
-	
+
 	// 保存并验证文档可以正常生成
 	filename := "test_page_break.docx"
 	defer os.Remove(filename)
-	
+
 	err := doc.Save(filename)
 	if err != nil {
 		t.Fatalf("保存包含分页符的文档失败: %v", err)
 	}
-	
+
 	// 验证文件存在
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		t.Error("保存的文档文件不存在")
@@ -1005,40 +1005,40 @@ func TestAddPageBreak(t *testing.T) {
 // TestRemoveParagraph 测试删除段落功能
 func TestRemoveParagraph(t *testing.T) {
 	doc := New()
-	
+
 	// 添加三个段落
 	para1 := doc.AddParagraph("第一段")
 	para2 := doc.AddParagraph("第二段")
 	para3 := doc.AddParagraph("第三段")
-	
+
 	// 验证初始状态
 	if len(doc.Body.Elements) != 3 {
 		t.Fatalf("期望文档包含3个段落，实际包含 %d 个", len(doc.Body.Elements))
 	}
-	
+
 	// 删除第二个段落
 	if !doc.RemoveParagraph(para2) {
 		t.Error("删除段落应该成功")
 	}
-	
+
 	// 验证删除后的状态
 	if len(doc.Body.Elements) != 2 {
 		t.Errorf("删除后期望文档包含2个段落，实际包含 %d 个", len(doc.Body.Elements))
 	}
-	
+
 	// 验证剩余的段落是正确的
 	paragraphs := doc.Body.GetParagraphs()
 	if len(paragraphs) != 2 {
 		t.Fatalf("期望获取到2个段落，实际获取到 %d 个", len(paragraphs))
 	}
-	
+
 	if paragraphs[0] != para1 {
 		t.Error("第一个段落应该是 para1")
 	}
 	if paragraphs[1] != para3 {
 		t.Error("第二个段落应该是 para3")
 	}
-	
+
 	// 尝试删除已删除的段落（应该返回false）
 	if doc.RemoveParagraph(para2) {
 		t.Error("删除不存在的段落应该返回false")
@@ -1048,38 +1048,38 @@ func TestRemoveParagraph(t *testing.T) {
 // TestRemoveParagraphAt 测试按索引删除段落功能
 func TestRemoveParagraphAt(t *testing.T) {
 	doc := New()
-	
+
 	// 添加三个段落
 	doc.AddParagraph("第一段")
 	doc.AddParagraph("第二段")
 	doc.AddParagraph("第三段")
-	
+
 	// 验证初始状态
 	paragraphs := doc.Body.GetParagraphs()
 	if len(paragraphs) != 3 {
 		t.Fatalf("期望文档包含3个段落，实际包含 %d 个", len(paragraphs))
 	}
-	
+
 	// 删除索引为1的段落（第二段）
 	if !doc.RemoveParagraphAt(1) {
 		t.Error("删除索引1的段落应该成功")
 	}
-	
+
 	// 验证删除后的状态
 	paragraphs = doc.Body.GetParagraphs()
 	if len(paragraphs) != 2 {
 		t.Errorf("删除后期望文档包含2个段落，实际包含 %d 个", len(paragraphs))
 	}
-	
+
 	// 验证剩余段落的内容
 	assertParagraphContent(t, paragraphs, 0, "第一段")
 	assertParagraphContent(t, paragraphs, 1, "第三段")
-	
+
 	// 尝试删除超出范围的索引
 	if doc.RemoveParagraphAt(10) {
 		t.Error("删除超出范围的索引应该返回false")
 	}
-	
+
 	if doc.RemoveParagraphAt(-1) {
 		t.Error("删除负数索引应该返回false")
 	}
@@ -1088,33 +1088,33 @@ func TestRemoveParagraphAt(t *testing.T) {
 // TestRemoveElementAt 测试按元素索引删除功能
 func TestRemoveElementAt(t *testing.T) {
 	doc := New()
-	
+
 	// 添加段落和表格
 	doc.AddParagraph("段落1")
 	doc.AddTable(&TableConfig{Rows: 2, Cols: 2})
 	doc.AddParagraph("段落2")
-	
+
 	// 验证初始状态
 	if len(doc.Body.Elements) != 3 {
 		t.Fatalf("期望文档包含3个元素，实际包含 %d 个", len(doc.Body.Elements))
 	}
-	
+
 	// 删除索引为1的元素（表格）
 	if !doc.RemoveElementAt(1) {
 		t.Error("删除索引1的元素应该成功")
 	}
-	
+
 	// 验证删除后的状态
 	if len(doc.Body.Elements) != 2 {
 		t.Errorf("删除后期望文档包含2个元素，实际包含 %d 个", len(doc.Body.Elements))
 	}
-	
+
 	// 验证剩余的都是段落
 	paragraphs := doc.Body.GetParagraphs()
 	if len(paragraphs) != 2 {
 		t.Errorf("期望获取到2个段落，实际获取到 %d 个", len(paragraphs))
 	}
-	
+
 	// 尝试删除超出范围的索引
 	if doc.RemoveElementAt(10) {
 		t.Error("删除超出范围的索引应该返回false")
@@ -1124,7 +1124,7 @@ func TestRemoveElementAt(t *testing.T) {
 // TestPageBreakAndDeletion 综合测试分页符和删除功能
 func TestPageBreakAndDeletion(t *testing.T) {
 	doc := New()
-	
+
 	// 创建一个包含分页符的文档
 	doc.AddParagraph("第一页 - 段落1")
 	doc.AddParagraph("第一页 - 段落2")
@@ -1132,31 +1132,31 @@ func TestPageBreakAndDeletion(t *testing.T) {
 	doc.AddParagraph("第二页 - 段落1")
 	doc.AddPageBreak()
 	doc.AddParagraph("第三页 - 段落1")
-	
+
 	// 验证初始状态（2个段落 + 1个分页符 + 1个段落 + 1个分页符 + 1个段落 = 6个元素）
 	if len(doc.Body.Elements) != 6 {
 		t.Fatalf("期望文档包含6个元素，实际包含 %d 个", len(doc.Body.Elements))
 	}
-	
+
 	// 删除第一个分页符（索引2）
 	if !doc.RemoveElementAt(2) {
 		t.Error("删除分页符应该成功")
 	}
-	
+
 	// 验证删除后的状态
 	if len(doc.Body.Elements) != 5 {
 		t.Errorf("删除后期望文档包含5个元素，实际包含 %d 个", len(doc.Body.Elements))
 	}
-	
+
 	// 保存文档并验证
 	filename := "test_pagebreak_deletion.docx"
 	defer os.Remove(filename)
-	
+
 	err := doc.Save(filename)
 	if err != nil {
 		t.Fatalf("保存文档失败: %v", err)
 	}
-	
+
 	// 验证文件存在
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		t.Error("保存的文档文件不存在")

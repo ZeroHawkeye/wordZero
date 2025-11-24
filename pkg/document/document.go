@@ -108,11 +108,11 @@ type ParagraphProperties struct {
 	Spacing             *Spacing             `xml:"w:spacing,omitempty"`
 	Indentation         *Indentation         `xml:"w:ind,omitempty"`
 	Justification       *Justification       `xml:"w:jc,omitempty"`
-	KeepNext            *KeepNext            `xml:"w:keepNext,omitempty"`     // 与下一段落保持在一起
-	KeepLines           *KeepLines           `xml:"w:keepLines,omitempty"`    // 段落中的行保持在一起
+	KeepNext            *KeepNext            `xml:"w:keepNext,omitempty"`        // 与下一段落保持在一起
+	KeepLines           *KeepLines           `xml:"w:keepLines,omitempty"`       // 段落中的行保持在一起
 	PageBreakBefore     *PageBreakBefore     `xml:"w:pageBreakBefore,omitempty"` // 段前分页
-	WidowControl        *WidowControl        `xml:"w:widowControl,omitempty"` // 孤行控制
-	OutlineLevel        *OutlineLevel        `xml:"w:outlineLvl,omitempty"`   // 大纲级别
+	WidowControl        *WidowControl        `xml:"w:widowControl,omitempty"`    // 孤行控制
+	OutlineLevel        *OutlineLevel        `xml:"w:outlineLvl,omitempty"`      // 大纲级别
 }
 
 // ParagraphBorder 段落边框
@@ -1184,7 +1184,7 @@ func (d *Document) AddHeadingParagraphWithBookmark(text string, level int, bookm
 //	doc.AddParagraph("第二页内容")
 func (d *Document) AddPageBreak() {
 	Debugf("添加分页符")
-	
+
 	// 创建一个包含分页符的段落
 	p := &Paragraph{
 		Runs: []Run{
@@ -1195,7 +1195,7 @@ func (d *Document) AddPageBreak() {
 			},
 		},
 	}
-	
+
 	d.Body.Elements = append(d.Body.Elements, p)
 }
 
@@ -2713,7 +2713,7 @@ func (d *Document) parseDocumentRelationships() error {
 			filteredRels = append(filteredRels, rel)
 		}
 	}
-	
+
 	d.documentRelationships.Relationships = filteredRels
 	Debugf("文档关系解析完成，共 %d 个关系", len(filteredRels))
 	return nil
@@ -2723,7 +2723,7 @@ func (d *Document) parseDocumentRelationships() error {
 // 确保新添加的图片ID不会与现有图片冲突
 func (d *Document) updateNextImageID() {
 	maxImageID := -1
-	
+
 	// 遍历所有parts，查找已存在的图片文件的最大ID
 	for partName := range d.parts {
 		// 检查是否是图片文件（word/media/imageN.xxx）
@@ -2738,11 +2738,11 @@ func (d *Document) updateNextImageID() {
 			}
 		}
 	}
-	
+
 	// 设置nextImageID为最大图片ID + 1
 	// 如果没有现有图片，maxImageID为-1，nextImageID应该为0
 	d.nextImageID = maxImageID + 1
-	
+
 	Debugf("更新图片ID计数器: nextImageID = %d", d.nextImageID)
 }
 
@@ -2859,7 +2859,7 @@ func (d *Document) RemoveParagraphAt(index int) bool {
 		Debugf("错误：段落索引不能为负数: %d", index)
 		return false
 	}
-	
+
 	// 优化：单次遍历找到目标段落及其元素索引
 	paragraphCount := 0
 	for i, element := range d.Body.Elements {
@@ -2873,7 +2873,7 @@ func (d *Document) RemoveParagraphAt(index int) bool {
 			paragraphCount++
 		}
 	}
-	
+
 	Debugf("错误：段落索引 %d 超出范围 [0, %d)", index, paragraphCount)
 	return false
 }
@@ -2896,7 +2896,7 @@ func (d *Document) RemoveElementAt(index int) bool {
 		Debugf("错误：元素索引 %d 超出范围 [0, %d)", index, len(d.Body.Elements))
 		return false
 	}
-	
+
 	// 删除元素
 	d.Body.Elements = append(d.Body.Elements[:index], d.Body.Elements[index+1:]...)
 	Debugf("删除元素: 索引 %d", index)

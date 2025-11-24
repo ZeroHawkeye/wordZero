@@ -487,38 +487,38 @@ func (te *TemplateEngine) renderLoopsNested(content string, lists map[string][]i
 	// 查找第一个 {{#each}} 标记
 	eachStartPattern := regexp.MustCompile(`\{\{#each\s+(\w+)\}\}`)
 	startMatch := eachStartPattern.FindStringIndex(content)
-	
+
 	if startMatch == nil {
 		// 没有找到循环，直接返回
 		return content
 	}
-	
+
 	// 找到了循环开始标记，现在需要找到匹配的结束标记
 	startPos := startMatch[0]
 	listVarMatch := eachStartPattern.FindStringSubmatch(content[startPos:])
 	if len(listVarMatch) < 2 {
 		return content
 	}
-	
+
 	listVar := listVarMatch[1]
 	blockStart := startMatch[1] // {{#each xxx}} 之后的位置
-	
+
 	// 使用栈来找到匹配的 {{/each}}
 	depth_counter := 1
 	pos := blockStart
 	blockEnd := -1
-	
+
 	for pos < len(content) {
 		// 查找下一个 {{#each}} 或 {{/each}}
 		nextEach := eachStartPattern.FindStringIndex(content[pos:])
 		endPattern := regexp.MustCompile(`\{\{/each\}\}`)
 		nextEnd := endPattern.FindStringIndex(content[pos:])
-		
+
 		if nextEnd == nil {
 			// 没有找到结束标记，语法错误
 			break
 		}
-		
+
 		// 确定下一个是开始还是结束
 		if nextEach != nil && nextEach[0] < nextEnd[0] {
 			// 下一个是嵌套的开始标记
@@ -535,21 +535,21 @@ func (te *TemplateEngine) renderLoopsNested(content string, lists map[string][]i
 			pos = pos + nextEnd[1]
 		}
 	}
-	
+
 	if blockEnd == -1 {
 		// 没有找到匹配的结束标记
 		return content
 	}
-	
+
 	// 提取循环块内容
 	blockContent := content[blockStart:blockEnd]
-	
+
 	// 处理循环
 	var result strings.Builder
-	
+
 	// 添加循环之前的内容
 	result.WriteString(content[:startPos])
-	
+
 	// 渲染循环
 	if listData, exists := lists[listVar]; exists {
 		for i, item := range listData {
@@ -558,7 +558,7 @@ func (te *TemplateEngine) renderLoopsNested(content string, lists map[string][]i
 			loopContent = strings.ReplaceAll(loopContent, "{{@index}}", strconv.Itoa(i))
 			loopContent = strings.ReplaceAll(loopContent, "{{@first}}", strconv.FormatBool(i == 0))
 			loopContent = strings.ReplaceAll(loopContent, "{{@last}}", strconv.FormatBool(i == len(listData)-1))
-			
+
 			// 如果item是map，处理属性访问
 			if itemMap, ok := item.(map[string]interface{}); ok {
 				// 首先处理嵌套的循环（在替换变量之前）
@@ -570,12 +570,12 @@ func (te *TemplateEngine) renderLoopsNested(content string, lists map[string][]i
 						nestedLists[key] = listValue
 					}
 				}
-				
+
 				// 如果有嵌套列表，递归处理嵌套循环
 				if len(nestedLists) > 0 {
 					loopContent = te.renderLoopsNested(loopContent, nestedLists, depth+1)
 				}
-				
+
 				// 然后替换普通变量
 				for key, value := range itemMap {
 					placeholder := fmt.Sprintf("{{%s}}", key)
@@ -584,20 +584,20 @@ func (te *TemplateEngine) renderLoopsNested(content string, lists map[string][]i
 						loopContent = strings.ReplaceAll(loopContent, placeholder, te.interfaceToString(value))
 					}
 				}
-				
+
 				// 处理循环内部的条件语句
 				loopContent = te.renderLoopConditionals(loopContent, itemMap)
 			}
-			
+
 			result.WriteString(loopContent)
 		}
 	}
-	
+
 	// 添加循环之后的内容，并递归处理剩余内容中的其他循环
 	remainingContent := content[blockEnd+len("{{/each}}"):]
 	remainingContent = te.renderLoopsNested(remainingContent, lists, depth)
 	result.WriteString(remainingContent)
-	
+
 	return result.String()
 }
 
