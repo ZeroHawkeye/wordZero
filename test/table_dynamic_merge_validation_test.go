@@ -109,7 +109,7 @@ func TestTableDynamicRowMergeValidation(t *testing.T) {
 				}
 
 				// 验证合并的起始单元格有GridSpan属性
-				mergedCell := &table.Rows[tm.row].Cells[tm.startCol]
+				mergedCell := table.Rows[tm.row].Cells[tm.startCol]
 				if mergedCell.Properties == nil || mergedCell.Properties.GridSpan == nil {
 					t.Errorf("%s后GridSpan未设置", tm.name)
 				} else {
@@ -131,11 +131,11 @@ func TestTableDynamicRowMergeValidation(t *testing.T) {
 		// 验证每个单元格的宽度属性都正确设置
 		for i, row := range table.Rows {
 			for j, cell := range row.Cells {
+				// 跳过已合并的单元格（它们有GridSpan或VMerge属性）
+				if cell.Properties != nil && (cell.Properties.GridSpan != nil || cell.Properties.VMerge != nil) {
+					continue
+				}
 				if cell.Properties == nil || cell.Properties.TableCellW == nil {
-					// 跳过被合并掉的单元格（它们应该有GridSpan或VMerge）
-					if cell.Properties != nil && (cell.Properties.GridSpan != nil || cell.Properties.VMerge != nil) {
-						continue
-					}
 					t.Errorf("行%d列%d缺少宽度属性", i+1, j+1)
 				}
 			}
@@ -263,7 +263,13 @@ func TestTableDynamicRowMergeValidation(t *testing.T) {
 		}
 
 		// 执行合并后再次验证
-		table.MergeCellsHorizontal(5, 1, 3)
+		const (
+			mergeRow       = 5
+			mergeStartCol  = 1
+			mergeEndCol    = 3
+			mergedCellSpan = mergeEndCol - mergeStartCol + 1
+		)
+		table.MergeCellsHorizontal(mergeRow, mergeStartCol, mergeEndCol)
 
 		// 验证未合并的单元格宽度仍然正确
 		for i, row := range table.Rows {
@@ -279,20 +285,18 @@ func TestTableDynamicRowMergeValidation(t *testing.T) {
 				}
 
 				// 对于未合并的单元格，验证宽度
-				if i != 5 || j == 0 || j > 3 {
+				// 第5行（索引5）的列1-3已被合并，需要调整后续列的索引映射
+				colIndex := j
+				if i == mergeRow && j > mergeStartCol {
+					// 第5行合并了列1-3，所以后续列的原始索引需要加上被合并掉的列数
+					colIndex = j + (mergedCellSpan - 1)
+				}
+				if colIndex < len(expectedWidths) {
+					expectedWidth := expectedWidths[colIndex]
 					actualWidth := cell.Properties.TableCellW.W
-					// 找到对应的原始列索引
-					colIndex := j
-					if i == 5 && j > 1 {
-						// 第5行合并了列1-3，所以列索引需要调整
-						colIndex = j + 2
-					}
-					if colIndex < len(expectedWidths) {
-						expectedWidth := expectedWidths[colIndex]
-						if actualWidth != expectedWidth {
-							t.Errorf("合并后行%d列%d宽度不一致: 期望%s，实际%s",
-								i+1, j+1, expectedWidth, actualWidth)
-						}
+					if actualWidth != expectedWidth {
+						t.Errorf("合并后行%d列%d宽度不一致: 期望%s，实际%s",
+							i+1, j+1, expectedWidth, actualWidth)
 					}
 				}
 			}
