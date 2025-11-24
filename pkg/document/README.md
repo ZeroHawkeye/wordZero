@@ -43,7 +43,7 @@
 
 ### 文档内容操作
 - [`AddParagraph(text string)`](document.go#L420) - 添加简单段落
-- [`AddFormattedParagraph(text string, format *TextFormat)`](document.go#L459) - 添加格式化段落
+- [`AddFormattedParagraph(text string, format *TextFormat)`](document.go#L459) - 添加格式化段落（支持粗体、斜体、下划线、删除线、高亮等格式）
 - [`AddHeadingParagraph(text string, level int)`](document.go#L682) - 添加标题段落
 - [`AddHeadingParagraphWithBookmark(text string, level int, bookmarkName string)`](document.go#L747) - 添加带书签的标题段落 ✨ **新增功能**
 - [`AddPageBreak()`](document.go#L1185) - 添加分页符
@@ -414,7 +414,7 @@ para.SetParagraphFormat(&document.ParagraphFormatConfig{
 - **章节管理** - 使用段前分页实现章节的页面独立性
 
 ### 段落内容操作
-- [`AddFormattedText(text string, format *TextFormat)`](document.go) - 添加格式化文本
+- [`AddFormattedText(text string, format *TextFormat)`](document.go) - 添加格式化文本（支持粗体、斜体、下划线、删除线、高亮等格式）
 - [`ElementType()`](document.go) - 获取段落元素类型
 
 ## 文档主体操作方法
@@ -620,6 +620,15 @@ type CellInfo struct {
 
 ### 文本格式
 - `TextFormat` - 文本格式配置
+  - `Bold` - 是否粗体 (bool)
+  - `Italic` - 是否斜体 (bool)
+  - `FontSize` - 字体大小，单位磅 (int)
+  - `FontColor` - 字体颜色，十六进制格式如 "FF0000" 表示红色 (string)
+  - `FontFamily` - 字体名称 (string)
+  - `FontName` - 字体名称别名，为兼容早期版本 (string)
+  - `Underline` - 是否下划线 (bool)
+  - `Strike` - 是否删除线 (bool)
+  - `Highlight` - 高亮颜色，如 "yellow"、"green" 等 (string)
 - `AlignmentType` - 对齐类型
 - `SpacingConfig` - 间距配置
 
@@ -806,6 +815,24 @@ doc.AddNumberedList("第二项", 0, document.ListTypeDecimal)
 // 添加段落
 para := doc.AddParagraph("这是一个段落")
 para.SetAlignment(document.AlignCenter)
+
+// ✨ 文本格式化示例
+// 添加格式化段落
+formattedPara := doc.AddFormattedParagraph("这是下划线文本", &document.TextFormat{
+    Underline: true,
+})
+
+// 向现有段落添加多种格式文本
+mixedPara := doc.AddParagraph("")
+mixedPara.AddFormattedText("粗体", &document.TextFormat{Bold: true})
+mixedPara.AddFormattedText(" + ", nil)
+mixedPara.AddFormattedText("斜体", &document.TextFormat{Italic: true})
+mixedPara.AddFormattedText(" + ", nil)
+mixedPara.AddFormattedText("下划线", &document.TextFormat{Underline: true})
+mixedPara.AddFormattedText(" + ", nil)
+mixedPara.AddFormattedText("删除线", &document.TextFormat{Strike: true})
+mixedPara.AddFormattedText(" + ", nil)
+mixedPara.AddFormattedText("高亮", &document.TextFormat{Highlight: "yellow"})
 
 // 创建表格
 table := doc.CreateTable(&document.TableConfig{
