@@ -1002,6 +1002,42 @@ func TestAddPageBreak(t *testing.T) {
 	}
 }
 
+// TestParagraphAddPageBreak 测试段落内添加分页符功能
+func TestParagraphAddPageBreak(t *testing.T) {
+	doc := New()
+
+	// 创建一个段落并添加分页符
+	para := doc.AddParagraph("分页符前的内容")
+	para.AddPageBreak()
+	para.AddFormattedText("分页符后的内容", nil)
+
+	// 验证段落包含3个运行（文本、分页符、文本）
+	if len(para.Runs) != 3 {
+		t.Errorf("期望段落包含3个运行，实际包含 %d 个", len(para.Runs))
+	}
+
+	// 验证第二个运行是分页符
+	if para.Runs[1].Break == nil {
+		t.Error("第二个运行应该是分页符")
+	} else if para.Runs[1].Break.Type != "page" {
+		t.Errorf("分页符类型应该是 'page'，实际是 '%s'", para.Runs[1].Break.Type)
+	}
+
+	// 保存并验证文档可以正常生成
+	filename := "test_paragraph_page_break.docx"
+	defer os.Remove(filename)
+
+	err := doc.Save(filename)
+	if err != nil {
+		t.Fatalf("保存包含段落内分页符的文档失败: %v", err)
+	}
+
+	// 验证文件存在
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		t.Error("保存的文档文件不存在")
+	}
+}
+
 // TestRemoveParagraph 测试删除段落功能
 func TestRemoveParagraph(t *testing.T) {
 	doc := New()

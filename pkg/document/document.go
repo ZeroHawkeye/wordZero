@@ -1067,6 +1067,26 @@ func (p *Paragraph) AddFormattedText(text string, format *TextFormat) {
 	Debugf("向段落添加格式化文本: %s", text)
 }
 
+// AddPageBreak 向段落添加一个分页符。
+//
+// 此方法在当前段落中添加一个分页符，分页符之后的内容将显示在新页面上。
+// 与 Document.AddPageBreak() 不同，此方法不会创建新段落，而是在当前段落的运行中添加分页符。
+//
+// 示例:
+//
+//	para := doc.AddParagraph("第一页的内容")
+//	para.AddPageBreak()
+//	para.AddFormattedText("第二页的内容", nil)
+func (p *Paragraph) AddPageBreak() {
+	run := Run{
+		Break: &Break{
+			Type: "page",
+		},
+	}
+	p.Runs = append(p.Runs, run)
+	Debugf("向段落添加分页符")
+}
+
 // AddHeadingParagraph 向文档添加一个标题段落。
 //
 // 参数 text 是标题的文本内容。

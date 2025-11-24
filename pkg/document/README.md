@@ -48,6 +48,37 @@
 - [`AddHeadingParagraphWithBookmark(text string, level int, bookmarkName string)`](document.go#L747) - 添加带书签的标题段落 ✨ **新增功能**
 - [`AddPageBreak()`](document.go#L1185) - 添加分页符
 
+#### 分页符功能 ✨
+
+WordZero提供多种方式添加分页符（页面分页符）：
+
+**方法一：文档级分页符**
+```go
+doc := document.New()
+doc.AddParagraph("第一页内容")
+doc.AddPageBreak()  // 添加分页符
+doc.AddParagraph("第二页内容")
+```
+
+**方法二：段落内分页符**
+```go
+para := doc.AddParagraph("第一页内容")
+para.AddPageBreak()  // 在段落内添加分页符
+para.AddFormattedText("第二页内容", nil)
+```
+
+**方法三：段前分页**
+```go
+para := doc.AddParagraph("第二章标题")
+para.SetPageBreakBefore(true)  // 设置段落前自动分页
+```
+
+**分页功能特性**：
+- **独立分页符**: `Document.AddPageBreak()` 创建独立的分页段落
+- **段落内分页**: `Paragraph.AddPageBreak()` 在当前段落内添加分页符
+- **段前分页**: `Paragraph.SetPageBreakBefore(true)` 设置段落前自动分页
+- **表格分页控制**: 支持表格的分页控制设置
+
 #### 标题段落书签功能 ✨
 `AddHeadingParagraphWithBookmark` 方法现在支持为标题段落添加书签：
 
@@ -415,6 +446,7 @@ para.SetParagraphFormat(&document.ParagraphFormatConfig{
 
 ### 段落内容操作
 - [`AddFormattedText(text string, format *TextFormat)`](document.go) - 添加格式化文本
+- [`AddPageBreak()`](document.go) - 向段落添加分页符 ✨ **新增**
 - [`ElementType()`](document.go) - 获取段落元素类型
 
 ## 文档主体操作方法
