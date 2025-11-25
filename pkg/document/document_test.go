@@ -1396,3 +1396,306 @@ func TestCreateFormattedParagraph(t *testing.T) {
 		t.Errorf("空文本应该不添加Run，实际得到%d个", len(para4.Runs))
 	}
 }
+
+// TestParagraphSetUnderline 测试段落下划线设置
+func TestParagraphSetUnderline(t *testing.T) {
+	doc := New()
+	para := doc.AddParagraph("测试下划线文本")
+
+	// 测试启用下划线
+	para.SetUnderline(true)
+	if len(para.Runs) == 0 {
+		t.Fatal("段落应该包含至少一个Run")
+	}
+	if para.Runs[0].Properties == nil {
+		t.Fatal("Run属性不应为nil")
+	}
+	if para.Runs[0].Properties.Underline == nil {
+		t.Error("下划线属性不应为nil")
+	}
+	if para.Runs[0].Properties.Underline.Val != "single" {
+		t.Errorf("期望下划线类型'single'，实际得到'%s'", para.Runs[0].Properties.Underline.Val)
+	}
+
+	// 测试禁用下划线
+	para.SetUnderline(false)
+	if para.Runs[0].Properties.Underline != nil {
+		t.Error("禁用后下划线属性应为nil")
+	}
+}
+
+// TestParagraphSetBold 测试段落粗体设置
+func TestParagraphSetBold(t *testing.T) {
+	doc := New()
+	para := doc.AddParagraph("测试粗体文本")
+
+	// 测试启用粗体
+	para.SetBold(true)
+	if para.Runs[0].Properties == nil {
+		t.Fatal("Run属性不应为nil")
+	}
+	if para.Runs[0].Properties.Bold == nil {
+		t.Error("粗体属性不应为nil")
+	}
+	if para.Runs[0].Properties.BoldCs == nil {
+		t.Error("复杂脚本粗体属性不应为nil")
+	}
+
+	// 测试禁用粗体
+	para.SetBold(false)
+	if para.Runs[0].Properties.Bold != nil {
+		t.Error("禁用后粗体属性应为nil")
+	}
+	if para.Runs[0].Properties.BoldCs != nil {
+		t.Error("禁用后复杂脚本粗体属性应为nil")
+	}
+}
+
+// TestParagraphSetItalic 测试段落斜体设置
+func TestParagraphSetItalic(t *testing.T) {
+	doc := New()
+	para := doc.AddParagraph("测试斜体文本")
+
+	// 测试启用斜体
+	para.SetItalic(true)
+	if para.Runs[0].Properties == nil {
+		t.Fatal("Run属性不应为nil")
+	}
+	if para.Runs[0].Properties.Italic == nil {
+		t.Error("斜体属性不应为nil")
+	}
+	if para.Runs[0].Properties.ItalicCs == nil {
+		t.Error("复杂脚本斜体属性不应为nil")
+	}
+
+	// 测试禁用斜体
+	para.SetItalic(false)
+	if para.Runs[0].Properties.Italic != nil {
+		t.Error("禁用后斜体属性应为nil")
+	}
+	if para.Runs[0].Properties.ItalicCs != nil {
+		t.Error("禁用后复杂脚本斜体属性应为nil")
+	}
+}
+
+// TestParagraphSetStrike 测试段落删除线设置
+func TestParagraphSetStrike(t *testing.T) {
+	doc := New()
+	para := doc.AddParagraph("测试删除线文本")
+
+	// 测试启用删除线
+	para.SetStrike(true)
+	if para.Runs[0].Properties == nil {
+		t.Fatal("Run属性不应为nil")
+	}
+	if para.Runs[0].Properties.Strike == nil {
+		t.Error("删除线属性不应为nil")
+	}
+
+	// 测试禁用删除线
+	para.SetStrike(false)
+	if para.Runs[0].Properties.Strike != nil {
+		t.Error("禁用后删除线属性应为nil")
+	}
+}
+
+// TestParagraphSetHighlight 测试段落高亮设置
+func TestParagraphSetHighlight(t *testing.T) {
+	doc := New()
+	para := doc.AddParagraph("测试高亮文本")
+
+	// 测试设置黄色高亮
+	para.SetHighlight("yellow")
+	if para.Runs[0].Properties == nil {
+		t.Fatal("Run属性不应为nil")
+	}
+	if para.Runs[0].Properties.Highlight == nil {
+		t.Error("高亮属性不应为nil")
+	}
+	if para.Runs[0].Properties.Highlight.Val != "yellow" {
+		t.Errorf("期望高亮颜色'yellow'，实际得到'%s'", para.Runs[0].Properties.Highlight.Val)
+	}
+
+	// 测试移除高亮
+	para.SetHighlight("")
+	if para.Runs[0].Properties.Highlight != nil {
+		t.Error("移除后高亮属性应为nil")
+	}
+}
+
+// TestParagraphSetFontFamily 测试段落字体设置
+func TestParagraphSetFontFamily(t *testing.T) {
+	doc := New()
+	para := doc.AddParagraph("测试字体文本")
+
+	// 测试设置字体
+	para.SetFontFamily("微软雅黑")
+	if para.Runs[0].Properties == nil {
+		t.Fatal("Run属性不应为nil")
+	}
+	if para.Runs[0].Properties.FontFamily == nil {
+		t.Error("字体属性不应为nil")
+	}
+	if para.Runs[0].Properties.FontFamily.ASCII != "微软雅黑" {
+		t.Errorf("期望字体'微软雅黑'，实际得到'%s'", para.Runs[0].Properties.FontFamily.ASCII)
+	}
+	if para.Runs[0].Properties.FontFamily.EastAsia != "微软雅黑" {
+		t.Errorf("期望东亚字体'微软雅黑'，实际得到'%s'", para.Runs[0].Properties.FontFamily.EastAsia)
+	}
+
+	// 测试移除字体
+	para.SetFontFamily("")
+	if para.Runs[0].Properties.FontFamily != nil {
+		t.Error("移除后字体属性应为nil")
+	}
+}
+
+// TestParagraphSetFontSize 测试段落字体大小设置
+func TestParagraphSetFontSize(t *testing.T) {
+	doc := New()
+	para := doc.AddParagraph("测试字体大小文本")
+
+	// 测试设置字体大小
+	para.SetFontSize(14)
+	if para.Runs[0].Properties == nil {
+		t.Fatal("Run属性不应为nil")
+	}
+	if para.Runs[0].Properties.FontSize == nil {
+		t.Error("字体大小属性不应为nil")
+	}
+	// Word使用半磅单位，14磅 = 28半磅
+	if para.Runs[0].Properties.FontSize.Val != "28" {
+		t.Errorf("期望字体大小'28'（14磅），实际得到'%s'", para.Runs[0].Properties.FontSize.Val)
+	}
+	if para.Runs[0].Properties.FontSizeCs == nil {
+		t.Error("复杂脚本字体大小属性不应为nil")
+	}
+
+	// 测试移除字体大小
+	para.SetFontSize(0)
+	if para.Runs[0].Properties.FontSize != nil {
+		t.Error("移除后字体大小属性应为nil")
+	}
+}
+
+// TestParagraphSetColor 测试段落颜色设置
+func TestParagraphSetColor(t *testing.T) {
+	doc := New()
+	para := doc.AddParagraph("测试颜色文本")
+
+	// 测试设置颜色（不带#前缀）
+	para.SetColor("FF0000")
+	if para.Runs[0].Properties == nil {
+		t.Fatal("Run属性不应为nil")
+	}
+	if para.Runs[0].Properties.Color == nil {
+		t.Error("颜色属性不应为nil")
+	}
+	if para.Runs[0].Properties.Color.Val != "FF0000" {
+		t.Errorf("期望颜色'FF0000'，实际得到'%s'", para.Runs[0].Properties.Color.Val)
+	}
+
+	// 测试设置颜色（带#前缀，应被移除）
+	para.SetColor("#0000FF")
+	if para.Runs[0].Properties.Color.Val != "0000FF" {
+		t.Errorf("期望颜色'0000FF'（#前缀应被移除），实际得到'%s'", para.Runs[0].Properties.Color.Val)
+	}
+
+	// 测试移除颜色
+	para.SetColor("")
+	if para.Runs[0].Properties.Color != nil {
+		t.Error("移除后颜色属性应为nil")
+	}
+}
+
+// TestParagraphMultipleRunsFormatting 测试多个Run的格式设置
+func TestParagraphMultipleRunsFormatting(t *testing.T) {
+	doc := New()
+	// 使用第一段文本创建段落，而不是空字符串
+	para := doc.AddParagraph("第一段文本")
+
+	// 添加更多Run
+	para.AddFormattedText("第二段文本", nil)
+	para.AddFormattedText("第三段文本", nil)
+
+	if len(para.Runs) != 3 {
+		t.Fatalf("期望3个Run，实际得到%d个", len(para.Runs))
+	}
+
+	// 测试设置下划线应用于所有Run
+	para.SetUnderline(true)
+	for i, run := range para.Runs {
+		if run.Properties == nil || run.Properties.Underline == nil {
+			t.Errorf("Run %d 应该有下划线属性", i)
+		}
+	}
+
+	// 测试设置粗体应用于所有Run
+	para.SetBold(true)
+	for i, run := range para.Runs {
+		if run.Properties == nil || run.Properties.Bold == nil {
+			t.Errorf("Run %d 应该有粗体属性", i)
+		}
+	}
+
+	// 测试设置字体应用于所有Run
+	para.SetFontFamily("Arial")
+	for i, run := range para.Runs {
+		if run.Properties == nil || run.Properties.FontFamily == nil {
+			t.Errorf("Run %d 应该有字体属性", i)
+		}
+		if run.Properties.FontFamily.ASCII != "Arial" {
+			t.Errorf("Run %d 的字体应该是'Arial'，实际得到'%s'", i, run.Properties.FontFamily.ASCII)
+		}
+	}
+}
+
+// TestParagraphFormattingIntegration 测试文本格式化集成
+func TestParagraphFormattingIntegration(t *testing.T) {
+	doc := New()
+	para := doc.AddParagraph("完整格式化测试文本")
+
+	// 应用所有格式
+	para.SetBold(true)
+	para.SetItalic(true)
+	para.SetUnderline(true)
+	para.SetStrike(true)
+	para.SetHighlight("yellow")
+	para.SetFontFamily("Times New Roman")
+	para.SetFontSize(16)
+	para.SetColor("0000FF")
+
+	// 验证所有格式都已应用
+	props := para.Runs[0].Properties
+	if props.Bold == nil {
+		t.Error("粗体属性未设置")
+	}
+	if props.Italic == nil {
+		t.Error("斜体属性未设置")
+	}
+	if props.Underline == nil {
+		t.Error("下划线属性未设置")
+	}
+	if props.Strike == nil {
+		t.Error("删除线属性未设置")
+	}
+	if props.Highlight == nil || props.Highlight.Val != "yellow" {
+		t.Error("高亮属性未正确设置")
+	}
+	if props.FontFamily == nil || props.FontFamily.ASCII != "Times New Roman" {
+		t.Error("字体属性未正确设置")
+	}
+	if props.FontSize == nil || props.FontSize.Val != "32" {
+		t.Errorf("字体大小属性未正确设置，期望'32'，实际得到'%s'", props.FontSize.Val)
+	}
+	if props.Color == nil || props.Color.Val != "0000FF" {
+		t.Error("颜色属性未正确设置")
+	}
+
+	// 保存文档验证
+	err := doc.Save("test_formatting_integration.docx")
+	if err != nil {
+		t.Errorf("保存文档失败: %v", err)
+	}
+	os.Remove("test_formatting_integration.docx")
+}

@@ -1719,6 +1719,212 @@ func (p *Paragraph) SetHorizontalRule(style BorderStyle, size int, color string)
 	Debugf("设置水平分割线: 样式=%s, 粗细=%d, 颜色=%s", style, size, color)
 }
 
+// SetUnderline 设置段落中所有文本的下划线效果。
+//
+// 参数 underline 表示是否启用下划线。
+// 当设置为 true 时，将对段落中所有运行应用单线下划线效果。
+// 当设置为 false 时，将移除所有运行的下划线效果。
+//
+// 示例:
+//
+//	para := doc.AddParagraph("这是下划线文本")
+//	para.SetUnderline(true)
+func (p *Paragraph) SetUnderline(underline bool) {
+	for i := range p.Runs {
+		if p.Runs[i].Properties == nil {
+			p.Runs[i].Properties = &RunProperties{}
+		}
+		if underline {
+			p.Runs[i].Properties.Underline = &Underline{Val: "single"}
+		} else {
+			p.Runs[i].Properties.Underline = nil
+		}
+	}
+	Debugf("设置段落下划线: %v", underline)
+}
+
+// SetBold 设置段落中所有文本的粗体效果。
+//
+// 参数 bold 表示是否启用粗体。
+// 当设置为 true 时，将对段落中所有运行应用粗体效果。
+// 当设置为 false 时，将移除所有运行的粗体效果。
+//
+// 示例:
+//
+//	para := doc.AddParagraph("这是粗体文本")
+//	para.SetBold(true)
+func (p *Paragraph) SetBold(bold bool) {
+	for i := range p.Runs {
+		if p.Runs[i].Properties == nil {
+			p.Runs[i].Properties = &RunProperties{}
+		}
+		if bold {
+			p.Runs[i].Properties.Bold = &Bold{}
+			p.Runs[i].Properties.BoldCs = &BoldCs{}
+		} else {
+			p.Runs[i].Properties.Bold = nil
+			p.Runs[i].Properties.BoldCs = nil
+		}
+	}
+	Debugf("设置段落粗体: %v", bold)
+}
+
+// SetItalic 设置段落中所有文本的斜体效果。
+//
+// 参数 italic 表示是否启用斜体。
+// 当设置为 true 时，将对段落中所有运行应用斜体效果。
+// 当设置为 false 时，将移除所有运行的斜体效果。
+//
+// 示例:
+//
+//	para := doc.AddParagraph("这是斜体文本")
+//	para.SetItalic(true)
+func (p *Paragraph) SetItalic(italic bool) {
+	for i := range p.Runs {
+		if p.Runs[i].Properties == nil {
+			p.Runs[i].Properties = &RunProperties{}
+		}
+		if italic {
+			p.Runs[i].Properties.Italic = &Italic{}
+			p.Runs[i].Properties.ItalicCs = &ItalicCs{}
+		} else {
+			p.Runs[i].Properties.Italic = nil
+			p.Runs[i].Properties.ItalicCs = nil
+		}
+	}
+	Debugf("设置段落斜体: %v", italic)
+}
+
+// SetStrike 设置段落中所有文本的删除线效果。
+//
+// 参数 strike 表示是否启用删除线。
+// 当设置为 true 时，将对段落中所有运行应用删除线效果。
+// 当设置为 false 时，将移除所有运行的删除线效果。
+//
+// 示例:
+//
+//	para := doc.AddParagraph("这是删除线文本")
+//	para.SetStrike(true)
+func (p *Paragraph) SetStrike(strike bool) {
+	for i := range p.Runs {
+		if p.Runs[i].Properties == nil {
+			p.Runs[i].Properties = &RunProperties{}
+		}
+		if strike {
+			p.Runs[i].Properties.Strike = &Strike{}
+		} else {
+			p.Runs[i].Properties.Strike = nil
+		}
+	}
+	Debugf("设置段落删除线: %v", strike)
+}
+
+// SetHighlight 设置段落中所有文本的高亮颜色。
+//
+// 参数 color 是高亮颜色名称，支持的颜色包括：
+// "yellow", "green", "cyan", "magenta", "blue", "red", "darkBlue",
+// "darkCyan", "darkGreen", "darkMagenta", "darkRed", "darkYellow",
+// "darkGray", "lightGray", "black" 等。
+// 传入空字符串将移除高亮效果。
+//
+// 示例:
+//
+//	para := doc.AddParagraph("这是高亮文本")
+//	para.SetHighlight("yellow")
+func (p *Paragraph) SetHighlight(color string) {
+	for i := range p.Runs {
+		if p.Runs[i].Properties == nil {
+			p.Runs[i].Properties = &RunProperties{}
+		}
+		if color != "" {
+			p.Runs[i].Properties.Highlight = &Highlight{Val: color}
+		} else {
+			p.Runs[i].Properties.Highlight = nil
+		}
+	}
+	Debugf("设置段落高亮: %s", color)
+}
+
+// SetFontFamily 设置段落中所有文本的字体。
+//
+// 参数 name 是字体名称，如 "Arial"、"Times New Roman"、"微软雅黑" 等。
+//
+// 示例:
+//
+//	para := doc.AddParagraph("这是自定义字体文本")
+//	para.SetFontFamily("微软雅黑")
+func (p *Paragraph) SetFontFamily(name string) {
+	for i := range p.Runs {
+		if p.Runs[i].Properties == nil {
+			p.Runs[i].Properties = &RunProperties{}
+		}
+		if name != "" {
+			p.Runs[i].Properties.FontFamily = &FontFamily{
+				ASCII:    name,
+				HAnsi:    name,
+				EastAsia: name,
+				CS:       name,
+			}
+		} else {
+			p.Runs[i].Properties.FontFamily = nil
+		}
+	}
+	Debugf("设置段落字体: %s", name)
+}
+
+// SetFontSize 设置段落中所有文本的字体大小。
+//
+// 参数 size 是字体大小（磅），如 12、14、16 等。
+// 传入 0 或负数将移除字体大小设置。
+//
+// 示例:
+//
+//	para := doc.AddParagraph("这是大号文本")
+//	para.SetFontSize(16)
+func (p *Paragraph) SetFontSize(size int) {
+	for i := range p.Runs {
+		if p.Runs[i].Properties == nil {
+			p.Runs[i].Properties = &RunProperties{}
+		}
+		if size > 0 {
+			// Word 使用半磅为单位，所以乘以2
+			sizeStr := strconv.Itoa(size * 2)
+			p.Runs[i].Properties.FontSize = &FontSize{Val: sizeStr}
+			p.Runs[i].Properties.FontSizeCs = &FontSizeCs{Val: sizeStr}
+		} else {
+			p.Runs[i].Properties.FontSize = nil
+			p.Runs[i].Properties.FontSizeCs = nil
+		}
+	}
+	Debugf("设置段落字体大小: %d", size)
+}
+
+// SetColor 设置段落中所有文本的颜色。
+//
+// 参数 color 是十六进制颜色值，如 "FF0000"（红色）、"0000FF"（蓝色）等。
+// 颜色值不需要 "#" 前缀，如果包含会自动移除。
+// 传入空字符串将移除颜色设置。
+//
+// 示例:
+//
+//	para := doc.AddParagraph("这是红色文本")
+//	para.SetColor("FF0000")
+func (p *Paragraph) SetColor(color string) {
+	for i := range p.Runs {
+		if p.Runs[i].Properties == nil {
+			p.Runs[i].Properties = &RunProperties{}
+		}
+		if color != "" {
+			// 移除可能存在的 # 前缀
+			colorVal := strings.TrimPrefix(color, "#")
+			p.Runs[i].Properties.Color = &Color{Val: colorVal}
+		} else {
+			p.Runs[i].Properties.Color = nil
+		}
+	}
+	Debugf("设置段落颜色: %s", color)
+}
+
 // GetStyleManager 获取文档的样式管理器。
 //
 // 返回文档的样式管理器，可用于访问和管理样式。
