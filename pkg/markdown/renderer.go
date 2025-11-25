@@ -213,10 +213,7 @@ func (r *WordRenderer) renderInlineContent(node ast.Node, para *document.Paragra
 		default:
 			// 检查是否为行内数学公式
 			if r.opts.EnableMath && child.Kind() == mathjax.KindInlineMath {
-				latex := r.extractMathContent(child)
-				para.AddFormattedText(latex, &document.TextFormat{
-					FontFamily: "Cambria Math",
-				})
+				r.renderInlineMathToParagraph(child, para)
 				continue
 			}
 			// 对于其他类型，尝试提取文本内容
@@ -641,11 +638,7 @@ func (r *WordRenderer) renderTaskItemContent(parent ast.Node, para *document.Par
 		default:
 			// 检查是否为行内数学公式
 			if r.opts.EnableMath && child.Kind() == mathjax.KindInlineMath {
-				latex := r.extractMathContent(child)
-				// 将LaTeX转换为Word可显示的格式
-				para.AddFormattedText(latex, &document.TextFormat{
-					FontFamily: "Cambria Math",
-				})
+				r.renderInlineMathToParagraph(child, para)
 				continue
 			}
 			// 对于其他类型，尝试提取文本内容
@@ -655,6 +648,14 @@ func (r *WordRenderer) renderTaskItemContent(parent ast.Node, para *document.Par
 			}
 		}
 	}
+}
+
+// renderInlineMathToParagraph 将行内数学公式渲染到段落中
+func (r *WordRenderer) renderInlineMathToParagraph(node ast.Node, para *document.Paragraph) {
+	latex := r.extractMathContent(node)
+	para.AddFormattedText(latex, &document.TextFormat{
+		FontFamily: "Cambria Math",
+	})
 }
 
 // renderMathBlock 渲染块级数学公式
@@ -679,12 +680,8 @@ func (r *WordRenderer) renderMathBlock(node ast.Node) (ast.WalkStatus, error) {
 func (r *WordRenderer) renderInlineMath(node ast.Node) (ast.WalkStatus, error) {
 	// 行内公式通常由父节点处理（在renderInlineContent中）
 	// 如果直接调用此方法，创建一个新段落
-	latex := r.extractMathContent(node)
-
 	para := r.doc.AddParagraph("")
-	para.AddFormattedText(latex, &document.TextFormat{
-		FontFamily: "Cambria Math",
-	})
+	r.renderInlineMathToParagraph(node, para)
 
 	return ast.WalkSkipChildren, nil
 }

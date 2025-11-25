@@ -112,12 +112,12 @@ func (d *Document) AddMathFormula(latex string, isBlock bool) *MathParagraph {
 func (p *Paragraph) AddInlineMath(ommlContent string) {
 	Debugf("向段落添加行内数学公式")
 
-	// 创建一个特殊的Run来包含公式引用
-	// 注意：Word中行内公式实际上是通过特殊的oMath元素实现的
-	// 这里我们使用一个占位符方法，实际实现需要修改段落的序列化逻辑
+	// Create a special Run to contain formula reference
+	// Note: In Word, inline formulas are implemented through special oMath elements
+	// Here we use a placeholder method, actual implementation needs to modify paragraph serialization logic
 	run := Run{
 		Text: Text{
-			Content: "[公式]", // 占位符，实际公式内容在序列化时处理
+			Content: "[Formula]", // Placeholder, actual formula content is processed during serialization
 			Space:   "preserve",
 		},
 	}
