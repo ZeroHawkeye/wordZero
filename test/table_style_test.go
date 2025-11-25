@@ -705,11 +705,8 @@ func TestBorderStyles(t *testing.T) {
 		}
 
 		table, err := doc.AddTable(config)
-	if err != nil {
-		t.Fatalf("创建表格失败: %v", err)
-	}
-		if table == nil {
-			t.Fatalf("创建表格%d失败", i+1)
+		if err != nil {
+			t.Fatalf("创建表格失败: %v", err)
 		}
 
 		borderConfig := &document.TableBorderConfig{

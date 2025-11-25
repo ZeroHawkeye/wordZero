@@ -78,7 +78,7 @@ func demonstrateBorders(doc *document.Document) {
 		},
 	}
 
-	table := doc.AddTable(config)
+	table, _ := doc.AddTable(config)
 	if table == nil {
 		log.Fatal("创建表格失败")
 	}
@@ -145,7 +145,7 @@ func demonstrateCellBorders(doc *document.Document) {
 		},
 	}
 
-	table := doc.AddTable(config)
+	table, _ := doc.AddTable(config)
 	if table == nil {
 		log.Fatal("创建表格失败")
 	}
@@ -207,7 +207,7 @@ func demonstrateTableShading(doc *document.Document) {
 		},
 	}
 
-	table := doc.AddTable(config)
+	table, _ := doc.AddTable(config)
 	if table == nil {
 		log.Fatal("创建表格失败")
 	}
@@ -242,7 +242,7 @@ func demonstrateCellShading(doc *document.Document) {
 		},
 	}
 
-	table := doc.AddTable(config)
+	table, _ := doc.AddTable(config)
 	if table == nil {
 		log.Fatal("创建表格失败")
 	}
@@ -295,7 +295,7 @@ func demonstrateAlternatingRows(doc *document.Document) {
 		},
 	}
 
-	table := doc.AddTable(config)
+	table, _ := doc.AddTable(config)
 	if table == nil {
 		log.Fatal("创建表格失败")
 	}
@@ -326,7 +326,7 @@ func demonstrateStyleTemplates(doc *document.Document) {
 		},
 	}
 
-	table1 := doc.AddTable(config1)
+	table1, _ := doc.AddTable(config1)
 	if table1 == nil {
 		log.Fatal("创建表格失败")
 	}
@@ -359,7 +359,7 @@ func demonstrateStyleTemplates(doc *document.Document) {
 		},
 	}
 
-	table2 := doc.AddTable(config2)
+	table2, _ := doc.AddTable(config2)
 	if table2 == nil {
 		log.Fatal("创建表格失败")
 	}
@@ -395,7 +395,7 @@ func demonstrateCustomStyle(doc *document.Document) {
 		},
 	}
 
-	table := doc.AddTable(config)
+	table, _ := doc.AddTable(config)
 	if table == nil {
 		log.Fatal("创建表格失败")
 	}
@@ -472,7 +472,7 @@ func demonstrateComplexStyle(doc *document.Document) {
 		},
 	}
 
-	table := doc.AddTable(config)
+	table, _ := doc.AddTable(config)
 	if table == nil {
 		log.Fatal("创建表格失败")
 	}
@@ -569,7 +569,7 @@ func demonstrateNoBorders(doc *document.Document) {
 		},
 	}
 
-	table := doc.AddTable(config)
+	table, _ := doc.AddTable(config)
 	if table == nil {
 		log.Fatal("创建表格失败")
 	}
@@ -633,7 +633,7 @@ func demonstrateBorderStyles(doc *document.Document) {
 			},
 		}
 
-		table := doc.AddTable(config)
+		table, _ := doc.AddTable(config)
 		if table == nil {
 			log.Fatalf("创建表格%d失败", i+1)
 		}

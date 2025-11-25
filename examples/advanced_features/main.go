@@ -204,7 +204,7 @@ func main() {
 	tableTitle.SetAlignment(document.AlignCenter)
 
 	// 创建3x4的表格
-	table := doc.AddTable(&document.TableConfig{
+	table, _ := doc.AddTable(&document.TableConfig{
 		Rows:  4,
 		Cols:  3,
 		Width: 9000,

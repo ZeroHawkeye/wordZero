@@ -86,7 +86,7 @@ func BenchmarkTableOperations(b *testing.B) {
 			Cols:  5,
 			Width: 7200, // 5英寸 = 7200磅
 		}
-		table := doc.AddTable(tableConfig)
+		table, _ := doc.AddTable(tableConfig)
 
 		// 填充表格数据
 		for row := 0; row < 10; row++ {
@@ -117,7 +117,7 @@ func BenchmarkLargeTable(b *testing.B) {
 			Cols:  10,
 			Width: 14400, // 10英寸 = 14400磅
 		}
-		table := doc.AddTable(tableConfig)
+		table, _ := doc.AddTable(tableConfig)
 
 		// 填充表格数据
 		for row := 0; row < 100; row++ {
@@ -158,7 +158,7 @@ func BenchmarkLargeDocument(b *testing.B) {
 			Cols:  8,
 			Width: 11520, // 8英寸 = 11520磅
 		}
-		table := doc.AddTable(tableConfig)
+		table, _ := doc.AddTable(tableConfig)
 		for row := 0; row < 20; row++ {
 			for col := 0; col < 8; col++ {
 				table.SetCellText(row, col, fmt.Sprintf("表格数据%d-%d", row+1, col+1))
@@ -194,7 +194,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 			Cols:  6,
 			Width: 8640, // 6英寸 = 8640磅
 		}
-		table := doc.AddTable(tableConfig)
+		table, _ := doc.AddTable(tableConfig)
 		for row := 0; row < 50; row++ {
 			for col := 0; col < 6; col++ {
 				table.SetCellText(row, col, fmt.Sprintf("单元格%d-%d", row+1, col+1))
@@ -383,7 +383,7 @@ func testTableOperationsFixed(index int) time.Duration {
 		Cols:  5,
 		Width: 7200, // 5英寸
 	}
-	table := doc.AddTable(tableConfig)
+	table, _ := doc.AddTable(tableConfig)
 
 	for row := 0; row < 10; row++ {
 		for col := 0; col < 5; col++ {
@@ -407,7 +407,7 @@ func testLargeTableProcessingFixed(index int) time.Duration {
 		Cols:  10,
 		Width: 14400, // 10英寸
 	}
-	table := doc.AddTable(tableConfig)
+	table, _ := doc.AddTable(tableConfig)
 
 	for row := 0; row < 100; row++ {
 		for col := 0; col < 10; col++ {
@@ -442,7 +442,7 @@ func testLargeDocumentFixed(index int) time.Duration {
 		Cols:  8,
 		Width: 11520, // 8英寸
 	}
-	table := doc.AddTable(tableConfig)
+	table, _ := doc.AddTable(tableConfig)
 	for row := 0; row < 20; row++ {
 		for col := 0; col < 8; col++ {
 			table.SetCellText(row, col, fmt.Sprintf("表格数据%d-%d", row+1, col+1))
@@ -473,7 +473,7 @@ func testMemoryUsageFixed(index int) time.Duration {
 		Cols:  6,
 		Width: 8640, // 6英寸
 	}
-	table := doc.AddTable(tableConfig)
+	table, _ := doc.AddTable(tableConfig)
 	for row := 0; row < 50; row++ {
 		for col := 0; col < 6; col++ {
 			table.SetCellText(row, col, fmt.Sprintf("单元格%d-%d", row+1, col+1))
@@ -554,7 +554,7 @@ func testTableOperations() time.Duration {
 		Cols:  5,
 		Width: 7200, // 5英寸
 	}
-	table := doc.AddTable(tableConfig)
+	table, _ := doc.AddTable(tableConfig)
 
 	for row := 0; row < 20; row++ {
 		for col := 0; col < 5; col++ {
@@ -576,7 +576,7 @@ func testLargeTableProcessing() time.Duration {
 		Cols:  8,
 		Width: 11520, // 8英寸
 	}
-	table := doc.AddTable(tableConfig)
+	table, _ := doc.AddTable(tableConfig)
 
 	for row := 0; row < 100; row++ {
 		for col := 0; col < 8; col++ {

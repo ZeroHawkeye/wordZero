@@ -67,7 +67,7 @@ func demonstrateBasicTable(doc *document.Document) {
 		Data:  tableData,
 	}
 
-	table := doc.AddTable(config)
+	table, _ := doc.AddTable(config)
 	if table != nil {
 		fmt.Printf("   创建表格成功：%dx%d\n", table.GetRowCount(), table.GetColumnCount())
 	}
@@ -90,7 +90,7 @@ func demonstrateTableDataOperations(doc *document.Document) {
 		},
 	}
 
-	table := doc.AddTable(config)
+	table, _ := doc.AddTable(config)
 	if table == nil {
 		fmt.Println("   创建表格失败")
 		return
@@ -130,7 +130,7 @@ func demonstrateTableStructureOperations(doc *document.Document) {
 		},
 	}
 
-	table := doc.AddTable(config)
+	table, _ := doc.AddTable(config)
 	if table == nil {
 		fmt.Println("   创建表格失败")
 		return
@@ -188,7 +188,7 @@ func demonstrateTableCopyAndClear(doc *document.Document) {
 		},
 	}
 
-	sourceTable := doc.AddTable(config)
+	sourceTable, _ := doc.AddTable(config)
 	if sourceTable == nil {
 		fmt.Println("   创建源表格失败")
 		return
@@ -234,7 +234,7 @@ func demonstrateTableDeletion(doc *document.Document) {
 		},
 	}
 
-	table := doc.AddTable(config)
+	table, _ := doc.AddTable(config)
 	if table == nil {
 		fmt.Println("   创建测试表格失败")
 		return

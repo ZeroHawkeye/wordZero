@@ -27,7 +27,7 @@ func main() {
 		},
 	}
 
-	table := doc.AddTable(config)
+	table, _ := doc.AddTable(config)
 	if table == nil {
 		log.Fatal("创建表格失败")
 	}

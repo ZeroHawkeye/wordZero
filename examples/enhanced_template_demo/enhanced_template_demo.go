@@ -145,7 +145,7 @@ func demonstrateTableTemplate() {
 		Cols:  4,
 		Width: 9000, // 15cm
 	}
-	table := templateDoc.CreateTable(tableConfig)
+	table, _ := templateDoc.CreateTable(tableConfig)
 
 	// 设置表头
 	table.SetCellText(0, 0, "产品名称")
@@ -279,7 +279,7 @@ func demonstrateComplexDocumentTemplate() {
 		Cols:  3,
 		Width: 8000,
 	}
-	teamTable := templateDoc.CreateTable(teamTableConfig)
+	teamTable, _ := templateDoc.CreateTable(teamTableConfig)
 
 	// 设置团队表格表头
 	teamTable.SetCellText(0, 0, "姓名")

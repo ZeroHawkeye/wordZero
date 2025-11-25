@@ -341,7 +341,7 @@ func createTeamSection(doc *document.Document) {
 		Cols:  4, // 姓名、角色、工作内容、是否负责人
 		Width: 9000,
 	}
-	teamTable := doc.CreateTable(teamTableConfig)
+	teamTable, _ := doc.CreateTable(teamTableConfig)
 
 	// 设置表头
 	headers := []string{"姓名", "角色", "工作内容", "负责人"}
@@ -382,7 +382,7 @@ func createTaskSection(doc *document.Document) {
 		Cols:  5, // 任务名称、状态、进度、负责人、优先级
 		Width: 10000,
 	}
-	taskTable := doc.CreateTable(taskTableConfig)
+	taskTable, _ := doc.CreateTable(taskTableConfig)
 
 	// 设置表头
 	taskHeaders := []string{"任务名称", "状态", "进度", "负责人", "优先级"}
@@ -424,7 +424,7 @@ func createMilestoneSection(doc *document.Document) {
 		Cols:  4, // 里程碑名称、日期、状态、是否完成
 		Width: 9000,
 	}
-	milestoneTable := doc.CreateTable(milestoneTableConfig)
+	milestoneTable, _ := doc.CreateTable(milestoneTableConfig)
 
 	// 设置表头
 	milestoneHeaders := []string{"里程碑", "计划日期", "状态", "完成"}
@@ -465,7 +465,7 @@ func createStatisticsSection(doc *document.Document) {
 		Cols:  3, // 指标、数值、单位
 		Width: 8000,
 	}
-	statsTable := doc.CreateTable(statsTableConfig)
+	statsTable, _ := doc.CreateTable(statsTableConfig)
 
 	// 设置表头
 	statsHeaders := []string{"统计指标", "数值", "单位"}

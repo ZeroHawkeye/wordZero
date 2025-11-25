@@ -27,7 +27,7 @@ func main() {
 		},
 	}
 
-	table := doc.AddTable(config)
+	table, _ := doc.AddTable(config)
 	if table == nil {
 		log.Fatal("创建表格失败")
 	}
@@ -84,7 +84,7 @@ func main() {
 		Width: 8000,
 	}
 
-	richTable := doc.AddTable(richTextConfig)
+	richTable, _ := doc.AddTable(richTextConfig)
 
 	// 在同一个单元格中添加不同格式的文本
 	err := richTable.SetCellFormattedText(0, 0, "标题：", &document.TextFormat{
@@ -121,7 +121,7 @@ func main() {
 		Width: 8000,
 	}
 
-	mergeTable := doc.AddTable(mergeConfig)
+	mergeTable, _ := doc.AddTable(mergeConfig)
 
 	// 设置初始数据
 	for row := 0; row < 5; row++ {
@@ -202,7 +202,7 @@ func main() {
 		Width: 6000,
 	}
 
-	opTable := doc.AddTable(opConfig)
+	opTable, _ := doc.AddTable(opConfig)
 
 	// 设置带格式的内容
 	err = opTable.SetCellFormattedText(0, 0, "原始内容", &document.TextFormat{
@@ -256,7 +256,7 @@ func main() {
 		Width: 8000,
 	}
 
-	directionTable := doc.AddTable(directionConfig)
+	directionTable, _ := doc.AddTable(directionConfig)
 
 	// 演示不同的文字方向
 	directions := []struct {

@@ -31,7 +31,7 @@ func main() {
 		},
 	}
 
-	table1 := doc.AddTable(config1)
+	table1, _ := doc.AddTable(config1)
 	if table1 == nil {
 		log.Fatal("创建表格1失败")
 	}
@@ -50,7 +50,7 @@ func main() {
 		},
 	}
 
-	table2 := doc.AddTable(config2)
+	table2, _ := doc.AddTable(config2)
 	if table2 == nil {
 		log.Fatal("创建表格2失败")
 	}
@@ -80,7 +80,7 @@ func main() {
 		},
 	}
 
-	table3 := doc.AddTable(config3)
+	table3, _ := doc.AddTable(config3)
 	if table3 == nil {
 		log.Fatal("创建表格3失败")
 	}
@@ -175,7 +175,7 @@ func main() {
 		},
 	}
 
-	table4 := doc.AddTable(config4)
+	table4, _ := doc.AddTable(config4)
 	if table4 == nil {
 		log.Fatal("创建表格4失败")
 	}

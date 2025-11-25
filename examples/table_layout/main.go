@@ -30,7 +30,7 @@ func main() {
 	fmt.Println("1. 创建行高设置演示表格...")
 	doc.AddParagraph("1. 行高设置演示").SetStyle("Heading1")
 
-	heightTable := doc.AddTable(&document.TableConfig{
+	heightTable, _ := doc.AddTable(&document.TableConfig{
 		Rows:  4,
 		Cols:  3,
 		Width: 8000,
@@ -79,7 +79,7 @@ func main() {
 
 	// 左对齐表格
 	doc.AddParagraph("2.1 左对齐表格").SetStyle("Heading2")
-	leftTable := doc.AddTable(&document.TableConfig{
+	leftTable, _ := doc.AddTable(&document.TableConfig{
 		Rows:  2,
 		Cols:  2,
 		Width: 4000,
@@ -92,7 +92,7 @@ func main() {
 
 	// 居中对齐表格
 	doc.AddParagraph("2.2 居中对齐表格").SetStyle("Heading2")
-	centerTable := doc.AddTable(&document.TableConfig{
+	centerTable, _ := doc.AddTable(&document.TableConfig{
 		Rows:  2,
 		Cols:  2,
 		Width: 4000,
@@ -105,7 +105,7 @@ func main() {
 
 	// 右对齐表格
 	doc.AddParagraph("2.3 右对齐表格").SetStyle("Heading2")
-	rightTable := doc.AddTable(&document.TableConfig{
+	rightTable, _ := doc.AddTable(&document.TableConfig{
 		Rows:  2,
 		Cols:  2,
 		Width: 4000,
@@ -122,7 +122,7 @@ func main() {
 	fmt.Println("3. 创建分页控制演示表格...")
 	doc.AddParagraph("3. 分页控制演示").SetStyle("Heading1")
 
-	pageBreakTable := doc.AddTable(&document.TableConfig{
+	pageBreakTable, _ := doc.AddTable(&document.TableConfig{
 		Rows:  6,
 		Cols:  4,
 		Width: 9000,
@@ -170,7 +170,7 @@ func main() {
 	fmt.Println("4. 创建复杂布局演示表格...")
 	doc.AddParagraph("4. 复杂布局演示").SetStyle("Heading1")
 
-	complexTable := doc.AddTable(&document.TableConfig{
+	complexTable, _ := doc.AddTable(&document.TableConfig{
 		Rows:      5,
 		Cols:      4,
 		Width:     9000,
