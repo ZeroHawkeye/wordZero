@@ -2296,6 +2296,13 @@ func (d *Document) parseRun(decoder *xml.Decoder, startElement xml.StartElement)
 					return nil, err
 				}
 				run.Text.Content = content
+			case "drawing":
+				// 解析绘图元素（图片等）
+				drawing, err := d.parseDrawingElement(decoder, t)
+				if err != nil {
+					return nil, err
+				}
+				run.Drawing = drawing
 			default:
 				if err := d.skipElement(decoder, t.Name.Local); err != nil {
 					return nil, err
@@ -3566,6 +3573,559 @@ func (d *Document) parseTableRowProperties(decoder *xml.Decoder) (*TableRowPrope
 		case xml.EndElement:
 			if t.Name.Local == "trPr" {
 				return props, nil
+			}
+		}
+	}
+}
+
+// parseDrawingElement 解析绘图元素（图片等）
+// 此方法用于从XML中解析完整的绘图元素结构
+func (d *Document) parseDrawingElement(decoder *xml.Decoder, startElement xml.StartElement) (*DrawingElement, error) {
+	drawing := &DrawingElement{}
+
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			return nil, WrapError("parse_drawing_element", err)
+		}
+
+		switch t := token.(type) {
+		case xml.StartElement:
+			switch t.Name.Local {
+			case "inline":
+				// 解析嵌入式绘图
+				inline, err := d.parseInlineDrawing(decoder, t)
+				if err != nil {
+					return nil, err
+				}
+				drawing.Inline = inline
+			case "anchor":
+				// 解析浮动绘图
+				anchor, err := d.parseAnchorDrawing(decoder, t)
+				if err != nil {
+					return nil, err
+				}
+				drawing.Anchor = anchor
+			default:
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			}
+		case xml.EndElement:
+			if t.Name.Local == "drawing" {
+				return drawing, nil
+			}
+		}
+	}
+}
+
+// parseInlineDrawing 解析嵌入式绘图
+func (d *Document) parseInlineDrawing(decoder *xml.Decoder, startElement xml.StartElement) (*InlineDrawing, error) {
+	inline := &InlineDrawing{}
+
+	// 解析属性
+	for _, attr := range startElement.Attr {
+		switch attr.Name.Local {
+		case "distT":
+			inline.DistT = attr.Value
+		case "distB":
+			inline.DistB = attr.Value
+		case "distL":
+			inline.DistL = attr.Value
+		case "distR":
+			inline.DistR = attr.Value
+		}
+	}
+
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			return nil, WrapError("parse_inline_drawing", err)
+		}
+
+		switch t := token.(type) {
+		case xml.StartElement:
+			switch t.Name.Local {
+			case "extent":
+				extent := &DrawingExtent{}
+				for _, attr := range t.Attr {
+					switch attr.Name.Local {
+					case "cx":
+						extent.Cx = attr.Value
+					case "cy":
+						extent.Cy = attr.Value
+					}
+				}
+				inline.Extent = extent
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			case "docPr":
+				docPr := &DrawingDocPr{}
+				for _, attr := range t.Attr {
+					switch attr.Name.Local {
+					case "id":
+						docPr.ID = attr.Value
+					case "name":
+						docPr.Name = attr.Value
+					case "descr":
+						docPr.Descr = attr.Value
+					case "title":
+						docPr.Title = attr.Value
+					}
+				}
+				inline.DocPr = docPr
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			case "graphic":
+				graphic, err := d.parseDrawingGraphic(decoder, t)
+				if err != nil {
+					return nil, err
+				}
+				inline.Graphic = graphic
+			default:
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			}
+		case xml.EndElement:
+			if t.Name.Local == "inline" {
+				return inline, nil
+			}
+		}
+	}
+}
+
+// parseAnchorDrawing 解析浮动绘图
+func (d *Document) parseAnchorDrawing(decoder *xml.Decoder, startElement xml.StartElement) (*AnchorDrawing, error) {
+	anchor := &AnchorDrawing{}
+
+	// 解析属性
+	for _, attr := range startElement.Attr {
+		switch attr.Name.Local {
+		case "distT":
+			anchor.DistT = attr.Value
+		case "distB":
+			anchor.DistB = attr.Value
+		case "distL":
+			anchor.DistL = attr.Value
+		case "distR":
+			anchor.DistR = attr.Value
+		case "simplePos":
+			anchor.SimplePos = attr.Value
+		case "relativeHeight":
+			anchor.RelativeHeight = attr.Value
+		case "behindDoc":
+			anchor.BehindDoc = attr.Value
+		case "locked":
+			anchor.Locked = attr.Value
+		case "layoutInCell":
+			anchor.LayoutInCell = attr.Value
+		case "allowOverlap":
+			anchor.AllowOverlap = attr.Value
+		}
+	}
+
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			return nil, WrapError("parse_anchor_drawing", err)
+		}
+
+		switch t := token.(type) {
+		case xml.StartElement:
+			switch t.Name.Local {
+			case "extent":
+				extent := &DrawingExtent{}
+				for _, attr := range t.Attr {
+					switch attr.Name.Local {
+					case "cx":
+						extent.Cx = attr.Value
+					case "cy":
+						extent.Cy = attr.Value
+					}
+				}
+				anchor.Extent = extent
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			case "docPr":
+				docPr := &DrawingDocPr{}
+				for _, attr := range t.Attr {
+					switch attr.Name.Local {
+					case "id":
+						docPr.ID = attr.Value
+					case "name":
+						docPr.Name = attr.Value
+					case "descr":
+						docPr.Descr = attr.Value
+					case "title":
+						docPr.Title = attr.Value
+					}
+				}
+				anchor.DocPr = docPr
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			case "graphic":
+				graphic, err := d.parseDrawingGraphic(decoder, t)
+				if err != nil {
+					return nil, err
+				}
+				anchor.Graphic = graphic
+			case "wrapNone":
+				anchor.WrapNone = &WrapNone{}
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			case "wrapSquare":
+				wrapSquare := &WrapSquare{}
+				for _, attr := range t.Attr {
+					switch attr.Name.Local {
+					case "wrapText":
+						wrapSquare.WrapText = attr.Value
+					case "distT":
+						wrapSquare.DistT = attr.Value
+					case "distB":
+						wrapSquare.DistB = attr.Value
+					case "distL":
+						wrapSquare.DistL = attr.Value
+					case "distR":
+						wrapSquare.DistR = attr.Value
+					}
+				}
+				anchor.WrapSquare = wrapSquare
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			default:
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			}
+		case xml.EndElement:
+			if t.Name.Local == "anchor" {
+				return anchor, nil
+			}
+		}
+	}
+}
+
+// parseDrawingGraphic 解析绘图图形元素
+func (d *Document) parseDrawingGraphic(decoder *xml.Decoder, startElement xml.StartElement) (*DrawingGraphic, error) {
+	graphic := &DrawingGraphic{}
+
+	// 解析属性
+	for _, attr := range startElement.Attr {
+		if attr.Name.Local == "a" || attr.Name.Space == "http://schemas.openxmlformats.org/drawingml/2006/main" {
+			graphic.Xmlns = attr.Value
+		}
+	}
+
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			return nil, WrapError("parse_drawing_graphic", err)
+		}
+
+		switch t := token.(type) {
+		case xml.StartElement:
+			switch t.Name.Local {
+			case "graphicData":
+				graphicData, err := d.parseGraphicData(decoder, t)
+				if err != nil {
+					return nil, err
+				}
+				graphic.GraphicData = graphicData
+			default:
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			}
+		case xml.EndElement:
+			if t.Name.Local == "graphic" {
+				return graphic, nil
+			}
+		}
+	}
+}
+
+// parseGraphicData 解析图形数据元素
+func (d *Document) parseGraphicData(decoder *xml.Decoder, startElement xml.StartElement) (*GraphicData, error) {
+	graphicData := &GraphicData{}
+
+	// 解析属性
+	for _, attr := range startElement.Attr {
+		if attr.Name.Local == "uri" {
+			graphicData.Uri = attr.Value
+		}
+	}
+
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			return nil, WrapError("parse_graphic_data", err)
+		}
+
+		switch t := token.(type) {
+		case xml.StartElement:
+			switch t.Name.Local {
+			case "pic":
+				pic, err := d.parsePicElement(decoder, t)
+				if err != nil {
+					return nil, err
+				}
+				graphicData.Pic = pic
+			default:
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			}
+		case xml.EndElement:
+			if t.Name.Local == "graphicData" {
+				return graphicData, nil
+			}
+		}
+	}
+}
+
+// parsePicElement 解析图片元素
+func (d *Document) parsePicElement(decoder *xml.Decoder, startElement xml.StartElement) (*PicElement, error) {
+	pic := &PicElement{}
+
+	// 解析属性
+	for _, attr := range startElement.Attr {
+		if attr.Name.Local == "pic" || attr.Name.Space == "http://schemas.openxmlformats.org/drawingml/2006/picture" {
+			pic.Xmlns = attr.Value
+		}
+	}
+
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			return nil, WrapError("parse_pic_element", err)
+		}
+
+		switch t := token.(type) {
+		case xml.StartElement:
+			switch t.Name.Local {
+			case "nvPicPr":
+				nvPicPr, err := d.parseNvPicPr(decoder, t)
+				if err != nil {
+					return nil, err
+				}
+				pic.NvPicPr = nvPicPr
+			case "blipFill":
+				blipFill, err := d.parseBlipFill(decoder, t)
+				if err != nil {
+					return nil, err
+				}
+				pic.BlipFill = blipFill
+			case "spPr":
+				spPr, err := d.parseSpPr(decoder, t)
+				if err != nil {
+					return nil, err
+				}
+				pic.SpPr = spPr
+			default:
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			}
+		case xml.EndElement:
+			if t.Name.Local == "pic" {
+				return pic, nil
+			}
+		}
+	}
+}
+
+// parseNvPicPr 解析非可视图片属性
+func (d *Document) parseNvPicPr(decoder *xml.Decoder, startElement xml.StartElement) (*NvPicPr, error) {
+	nvPicPr := &NvPicPr{}
+
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			return nil, WrapError("parse_nv_pic_pr", err)
+		}
+
+		switch t := token.(type) {
+		case xml.StartElement:
+			switch t.Name.Local {
+			case "cNvPr":
+				cNvPr := &CNvPr{}
+				for _, attr := range t.Attr {
+					switch attr.Name.Local {
+					case "id":
+						cNvPr.ID = attr.Value
+					case "name":
+						cNvPr.Name = attr.Value
+					case "descr":
+						cNvPr.Descr = attr.Value
+					case "title":
+						cNvPr.Title = attr.Value
+					}
+				}
+				nvPicPr.CNvPr = cNvPr
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			case "cNvPicPr":
+				cNvPicPr := &CNvPicPr{}
+				// 解析picLocks如果存在
+				nvPicPr.CNvPicPr = cNvPicPr
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			default:
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			}
+		case xml.EndElement:
+			if t.Name.Local == "nvPicPr" {
+				return nvPicPr, nil
+			}
+		}
+	}
+}
+
+// parseBlipFill 解析图片填充
+func (d *Document) parseBlipFill(decoder *xml.Decoder, startElement xml.StartElement) (*BlipFill, error) {
+	blipFill := &BlipFill{}
+
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			return nil, WrapError("parse_blip_fill", err)
+		}
+
+		switch t := token.(type) {
+		case xml.StartElement:
+			switch t.Name.Local {
+			case "blip":
+				blip := &Blip{}
+				for _, attr := range t.Attr {
+					if attr.Name.Local == "embed" {
+						blip.Embed = attr.Value
+					}
+				}
+				blipFill.Blip = blip
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			case "stretch":
+				blipFill.Stretch = &Stretch{FillRect: &FillRect{}}
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			default:
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			}
+		case xml.EndElement:
+			if t.Name.Local == "blipFill" {
+				return blipFill, nil
+			}
+		}
+	}
+}
+
+// parseSpPr 解析形状属性
+func (d *Document) parseSpPr(decoder *xml.Decoder, startElement xml.StartElement) (*SpPr, error) {
+	spPr := &SpPr{}
+
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			return nil, WrapError("parse_sp_pr", err)
+		}
+
+		switch t := token.(type) {
+		case xml.StartElement:
+			switch t.Name.Local {
+			case "xfrm":
+				xfrm, err := d.parseXfrm(decoder, t)
+				if err != nil {
+					return nil, err
+				}
+				spPr.Xfrm = xfrm
+			case "prstGeom":
+				prstGeom := &PrstGeom{AvLst: &AvLst{}}
+				for _, attr := range t.Attr {
+					if attr.Name.Local == "prst" {
+						prstGeom.Prst = attr.Value
+					}
+				}
+				spPr.PrstGeom = prstGeom
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			default:
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			}
+		case xml.EndElement:
+			if t.Name.Local == "spPr" {
+				return spPr, nil
+			}
+		}
+	}
+}
+
+// parseXfrm 解析变换元素
+func (d *Document) parseXfrm(decoder *xml.Decoder, startElement xml.StartElement) (*Xfrm, error) {
+	xfrm := &Xfrm{}
+
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			return nil, WrapError("parse_xfrm", err)
+		}
+
+		switch t := token.(type) {
+		case xml.StartElement:
+			switch t.Name.Local {
+			case "off":
+				off := &Off{}
+				for _, attr := range t.Attr {
+					switch attr.Name.Local {
+					case "x":
+						off.X = attr.Value
+					case "y":
+						off.Y = attr.Value
+					}
+				}
+				xfrm.Off = off
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			case "ext":
+				ext := &Ext{}
+				for _, attr := range t.Attr {
+					switch attr.Name.Local {
+					case "cx":
+						ext.Cx = attr.Value
+					case "cy":
+						ext.Cy = attr.Value
+					}
+				}
+				xfrm.Ext = ext
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			default:
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			}
+		case xml.EndElement:
+			if t.Name.Local == "xfrm" {
+				return xfrm, nil
 			}
 		}
 	}
