@@ -2256,6 +2256,13 @@ func (d *Document) parseParagraphProperties(decoder *xml.Decoder, paragraph *Par
 					return err
 				}
 				paragraph.Properties.NumberingProperties = numPr
+			case "sectPr":
+				// 一些文档将节属性存储在段落属性中
+				sectPr, err := d.parseSectionProperties(decoder, t)
+				if err != nil {
+					return err
+				}
+				d.setSectionProperties(sectPr)
 			default:
 				if err := d.skipElement(decoder, t.Name.Local); err != nil {
 					return err
@@ -2755,7 +2762,9 @@ func (d *Document) parseTableCell(decoder *xml.Decoder, startElement xml.StartEl
 
 // parseSectionProperties 解析节属性
 func (d *Document) parseSectionProperties(decoder *xml.Decoder, startElement xml.StartElement) (*SectionProperties, error) {
-	sectPr := &SectionProperties{}
+	sectPr := &SectionProperties{
+		XmlnsR: getAttributeValue(startElement.Attr, "xmlns:r"),
+	}
 
 	for {
 		token, err := decoder.Token()
@@ -2812,6 +2821,40 @@ func (d *Document) parseSectionProperties(decoder *xml.Decoder, startElement xml
 						LinePitch: linePitch,
 						CharSpace: charSpace,
 					}
+				}
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			case "headerReference":
+				ref := &HeaderFooterReference{
+					Type: getAttributeValue(t.Attr, "type"),
+					ID:   getAttributeValue(t.Attr, "id"),
+				}
+				if ref.Type == "" {
+					ref.Type = getAttributeValue(t.Attr, "w:type")
+				}
+				if ref.ID == "" {
+					ref.ID = getAttributeValue(t.Attr, "r:id")
+				}
+				if ref.ID != "" || ref.Type != "" {
+					sectPr.HeaderReferences = append(sectPr.HeaderReferences, ref)
+				}
+				if err := d.skipElement(decoder, t.Name.Local); err != nil {
+					return nil, err
+				}
+			case "footerReference":
+				ref := &FooterReference{
+					Type: getAttributeValue(t.Attr, "type"),
+					ID:   getAttributeValue(t.Attr, "id"),
+				}
+				if ref.Type == "" {
+					ref.Type = getAttributeValue(t.Attr, "w:type")
+				}
+				if ref.ID == "" {
+					ref.ID = getAttributeValue(t.Attr, "r:id")
+				}
+				if ref.ID != "" || ref.Type != "" {
+					sectPr.FooterReferences = append(sectPr.FooterReferences, ref)
 				}
 				if err := d.skipElement(decoder, t.Name.Local); err != nil {
 					return nil, err

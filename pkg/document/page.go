@@ -345,6 +345,27 @@ func (d *Document) getSectionProperties() *SectionProperties {
 	return sectPr
 }
 
+// setSectionProperties 替换或设置节属性
+func (d *Document) setSectionProperties(sectPr *SectionProperties) {
+	if sectPr == nil {
+		return
+	}
+
+	if d.Body == nil {
+		d.Body = &Body{Elements: []interface{}{sectPr}}
+		return
+	}
+
+	for i, element := range d.Body.Elements {
+		if _, ok := element.(*SectionProperties); ok {
+			d.Body.Elements[i] = sectPr
+			return
+		}
+	}
+
+	d.Body.Elements = append(d.Body.Elements, sectPr)
+}
+
 // ElementType 返回节属性元素类型
 func (s *SectionProperties) ElementType() string {
 	return "sectionProperties"
