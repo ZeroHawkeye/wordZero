@@ -2,7 +2,11 @@
 package document
 
 import (
+	"archive/zip"
+	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -1019,6 +1023,175 @@ func TestHeaderFooterVariableReplacement(t *testing.T) {
 	}
 }
 
+// TestTemplateFromFileWithParagraphSectionProperties 确保段落内的节属性仍能保留页眉页脚
+func TestTemplateFromFileWithParagraphSectionProperties(t *testing.T) {
+	doc := New()
+	doc.AddParagraph("{{title}}")
+
+	if err := doc.AddHeader(HeaderFooterTypeDefault, "报告编号: {{reportID}}"); err != nil {
+		t.Fatalf("添加页眉失败: %v", err)
+	}
+	if err := doc.AddFooter(HeaderFooterTypeDefault, "撰写人: {{author}}"); err != nil {
+		t.Fatalf("添加页脚失败: %v", err)
+	}
+
+	sectionMarker := "__SECTION_BREAK__"
+	doc.AddParagraph(sectionMarker)
+
+	tmpDir := t.TempDir()
+	basePath := filepath.Join(tmpDir, "base_paragraph_section.docx")
+	if err := doc.Save(basePath); err != nil {
+		t.Fatalf("保存基础文档失败: %v", err)
+	}
+
+	modifiedPath := filepath.Join(tmpDir, "paragraph_section_template.docx")
+	if err := moveSectPrIntoParagraph(basePath, modifiedPath, sectionMarker); err != nil {
+		t.Fatalf("调整节属性位置失败: %v", err)
+	}
+
+	loadedDoc, err := Open(modifiedPath)
+	if err != nil {
+		t.Fatalf("打开修改后的文档失败: %v", err)
+	}
+
+	engine := NewTemplateEngine()
+	_, err = engine.LoadTemplateFromDocument("paragraph_section_template", loadedDoc)
+	if err != nil {
+		t.Fatalf("加载模板失败: %v", err)
+	}
+
+	data := NewTemplateData()
+	data.SetVariable("title", "段落节属性测试")
+	data.SetVariable("reportID", "RPT-2024-009")
+	data.SetVariable("author", "测试作者")
+
+	renderedDoc, err := engine.RenderTemplateToDocument("paragraph_section_template", data)
+	if err != nil {
+		t.Fatalf("渲染模板失败: %v", err)
+	}
+
+	headerContent := string(renderedDoc.parts["word/header1.xml"])
+	if strings.Contains(headerContent, "{{reportID}}") {
+		t.Error("页眉中的变量应该被替换，即使节属性位于段落内")
+	}
+	if !strings.Contains(headerContent, "RPT-2024-009") {
+		t.Error("页眉中缺少替换后的值")
+	}
+
+	footerContent := string(renderedDoc.parts["word/footer1.xml"])
+	if strings.Contains(footerContent, "{{author}}") {
+		t.Error("页脚中的变量应该被替换")
+	}
+	if !strings.Contains(footerContent, "测试作者") {
+		t.Error("页脚中缺少替换后的值")
+	}
+}
+
+func moveSectPrIntoParagraph(srcPath, dstPath, marker string) error {
+	reader, err := zip.OpenReader(srcPath)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	output, err := os.Create(dstPath)
+	if err != nil {
+		return err
+	}
+	defer output.Close()
+
+	zipWriter := zip.NewWriter(output)
+	defer zipWriter.Close()
+
+	for _, file := range reader.File {
+		rc, err := file.Open()
+		if err != nil {
+			return err
+		}
+		data, err := io.ReadAll(rc)
+		rc.Close()
+		if err != nil {
+			return err
+		}
+
+		if file.Name == "word/document.xml" {
+			data, err = rewriteSectPrIntoParagraph(data, marker)
+			if err != nil {
+				return err
+			}
+		}
+
+		writer, err := zipWriter.Create(file.Name)
+		if err != nil {
+			return err
+		}
+		if _, err := writer.Write(data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func rewriteSectPrIntoParagraph(xmlData []byte, marker string) ([]byte, error) {
+	content := string(xmlData)
+	sectStart := strings.Index(content, "<w:sectPr")
+	if sectStart == -1 {
+		return nil, fmt.Errorf("未找到sectPr")
+	}
+
+	sectEndRel := strings.Index(content[sectStart:], "</w:sectPr>")
+	if sectEndRel == -1 {
+		return nil, fmt.Errorf("sectPr缺少结束标签")
+	}
+	sectEnd := sectStart + sectEndRel + len("</w:sectPr>")
+	sectBlock := content[sectStart:sectEnd]
+
+	sanitized := removeHeaderFooterReferences(sectBlock)
+	content = content[:sectStart] + sanitized + content[sectEnd:]
+
+	markerIndex := strings.Index(content, marker)
+	if markerIndex == -1 {
+		return nil, fmt.Errorf("未找到标记段落")
+	}
+
+	pStart := strings.LastIndex(content[:markerIndex], "<w:p")
+	if pStart == -1 {
+		return nil, fmt.Errorf("未找到段落起始标签")
+	}
+	openEnd := strings.Index(content[pStart:], ">")
+	if openEnd == -1 {
+		return nil, fmt.Errorf("段落标签未闭合")
+	}
+	insertPos := pStart + openEnd + 1
+
+	insert := "<w:pPr>" + sectBlock + "</w:pPr>"
+	modified := content[:insertPos] + insert + content[insertPos:]
+
+	return []byte(modified), nil
+}
+
+func removeHeaderFooterReferences(block string) string {
+	block = stripReferenceTag(block, "<w:headerReference")
+	block = stripReferenceTag(block, "<w:footerReference")
+	return block
+}
+
+func stripReferenceTag(block, tag string) string {
+	for {
+		start := strings.Index(block, tag)
+		if start == -1 {
+			break
+		}
+		end := strings.Index(block[start:], "/>")
+		if end == -1 {
+			break
+		}
+		block = block[:start] + block[start+end+2:]
+	}
+	return block
+}
+
 // TestTemplateDocumentPartsPreservation 测试模板渲染时文档部件的完整保留
 func TestTemplateDocumentPartsPreservation(t *testing.T) {
 	// 创建包含多种文档部件的源文档
@@ -1232,9 +1405,9 @@ func TestTemplateNumberingPropertiesPreservation(t *testing.T) {
 
 	// 添加带有编号的列表项
 	config := &ListConfig{
-		Type:         ListTypeNumber,
-		IndentLevel:  0,
-		StartNumber:  1,
+		Type:        ListTypeNumber,
+		IndentLevel: 0,
+		StartNumber: 1,
 	}
 	doc.AddListItem("第一条 {{itemTitle}}", config)
 	doc.AddListItem("第二条 {{itemContent}}", config)
