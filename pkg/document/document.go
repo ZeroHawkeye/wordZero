@@ -519,42 +519,6 @@ func Open(filename string) (*Document, error) {
 	}
 	defer reader.Close()
 
-	doc, err := openFromZipReader(&reader.Reader, filename)
-	if err != nil {
-		return nil, err
-	}
-
-	Infof("成功打开文档: %s", filename)
-	return doc, nil
-}
-
-func OpenFromMemory(readCloser io.ReadCloser) (*Document, error) {
-	defer readCloser.Close()
-	Infof("正在打开文档")
-
-	fileData, err := io.ReadAll(readCloser)
-	if err != nil {
-		return nil, fmt.Errorf("读取文件内容失败: %w", err)
-	}
-
-	readerAt := bytes.NewReader(fileData)
-	size := int64(len(fileData))
-	reader, err := zip.NewReader(readerAt, size)
-	if err != nil {
-		Errorf("无法打开文件")
-		return nil, WrapErrorWithContext("open_file", err, "")
-	}
-
-	doc, err := openFromZipReader(reader, "内存")
-	if err != nil {
-		return nil, err
-	}
-
-	Infof("成功打开文档")
-	return doc, nil
-}
-
-func openFromZipReader(zipReader *zip.Reader, filename string) (*Document, error) {
 	doc := &Document{
 		parts: make(map[string][]byte),
 		documentRelationships: &Relationships{
@@ -565,7 +529,7 @@ func openFromZipReader(zipReader *zip.Reader, filename string) (*Document, error
 	}
 
 	// 读取所有文件部件
-	for _, file := range zipReader.File {
+	for _, file := range reader.File {
 		rc, err := file.Open()
 		if err != nil {
 			Errorf("无法打开文件部件: %s", file.Name)
@@ -641,8 +605,83 @@ func openFromZipReader(zipReader *zip.Reader, filename string) (*Document, error
 	// 根据已有的图片关系更新nextImageID计数器
 	doc.updateNextImageID()
 
+	Infof("成功打开文档: %s", filename)
 	return doc, nil
+}
 
+func OpenFromMemory(readCloser io.ReadCloser) (*Document, error) {
+	defer readCloser.Close()
+	Infof("正在打开文档")
+
+	fileData, err := io.ReadAll(readCloser)
+	if err != nil {
+		return nil, fmt.Errorf("读取文件内容失败: %w", err)
+	}
+	defer readCloser.Close()
+
+	readerAt := bytes.NewReader(fileData)
+
+	reader, err := zip.NewReader(readerAt, readerAt.Size())
+	if err != nil {
+		Errorf("无法打开文件")
+		return nil, WrapErrorWithContext("open_file", err, "")
+	}
+
+	doc := &Document{
+		parts: make(map[string][]byte),
+		documentRelationships: &Relationships{
+			Xmlns:         "http://schemas.openxmlformats.org/package/2006/relationships",
+			Relationships: []Relationship{},
+		},
+		nextImageID: 0, // 初始化图片ID计数器，从0开始
+	}
+
+	// 读取所有文件部件
+	for _, file := range reader.File {
+		rc, err := file.Open()
+		if err != nil {
+			Errorf("无法打开文件部件: %s", file.Name)
+			return nil, WrapErrorWithContext("open_part", err, file.Name)
+		}
+
+		data, err := io.ReadAll(rc)
+		rc.Close()
+		if err != nil {
+			Errorf("无法读取文件部件: %s", file.Name)
+			return nil, WrapErrorWithContext("read_part", err, file.Name)
+		}
+
+		doc.parts[file.Name] = data
+		Debugf("已读取文件部件: %s (%d 字节)", file.Name, len(data))
+	}
+
+	// 初始化样式管理器
+	doc.styleManager = style.NewStyleManager()
+
+	// 解析主文档
+	if err := doc.parseDocument(); err != nil {
+		Errorf("解析文档失败")
+		return nil, WrapErrorWithContext("parse_document", err, "")
+	}
+
+	// 解析样式文件
+	if err := doc.parseStyles(); err != nil {
+		Debugf("解析样式失败，使用默认样式: %v", err)
+		// 如果样式解析失败，重新初始化为默认样式
+		doc.styleManager = style.NewStyleManager()
+	}
+
+	// 解析文档关系（包括图片等资源的关系）
+	if err := doc.parseDocumentRelationships(); err != nil {
+		Debugf("解析文档关系失败，使用默认值: %v", err)
+		// 如果解析失败，保持初始化的空关系列表
+	}
+
+	// 根据已有的图片关系更新nextImageID计数器
+	doc.updateNextImageID()
+
+	Infof("成功打开文档")
+	return doc, nil
 }
 
 // Save 将文档保存到指定的文件路径。

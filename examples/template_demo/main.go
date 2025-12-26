@@ -4,7 +4,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/ZeroHawkeye/wordZero/pkg/document"
@@ -41,10 +40,6 @@ func main() {
 	// 演示7: 结构体数据绑定
 	fmt.Println("\n7. 结构体数据绑定演示")
 	demonstrateStructDataBinding()
-
-	// 演示6: 从现有文档创建模板
-	fmt.Println("\n6. 从现有文档创建模板演示-从")
-	demonstrateDocumentToTemplateByRead()
 
 	fmt.Println("\n=====================================")
 	fmt.Println("模板功能演示完成！")
@@ -100,7 +95,7 @@ func demonstrateVariableReplacement() {
 	}
 
 	// 保存文档
-	err = doc.Save("examples/output/1template_variable_demo.docx")
+	err = doc.Save("examples/output/template_variable_demo.docx")
 	if err != nil {
 		log.Fatalf("保存文档失败: %v", err)
 	}
@@ -681,50 +676,6 @@ func demonstrateDocumentToTemplate() {
 	}
 
 	fmt.Println("✓ 从文档创建模板演示完成，文档已保存为 template_from_document_demo.docx")
-}
-
-func demonstrateDocumentToTemplateByRead() {
-
-	file, err := os.Open("./template_demo.docx")
-	defer file.Close()
-	// 从文档创建模板
-	doc, err := document.OpenFromMemory(file)
-	if err != nil {
-		log.Fatalf("从文档创建模板失败: %v", err)
-	}
-
-	// 创建模板引擎
-	engine := document.NewTemplateEngine()
-
-	// 从文档创建模板
-	template, err := engine.LoadTemplateFromDocument("employee_template", doc)
-	if err != nil {
-		log.Fatalf("从文档创建模板失败: %v", err)
-	}
-
-	fmt.Printf("从文档解析到 %d 个变量\n", len(template.Variables))
-
-	// 创建员工数据
-	data := document.NewTemplateData()
-	data.SetVariable("companyName", "WordZero科技有限公司")
-	data.SetVariable("department", "研发部")
-	data.SetVariable("employeeName", "李小明")
-	data.SetVariable("position", "软件工程师")
-	data.SetVariable("hireDate", "2024年12月1日")
-
-	// 渲染模板
-	renderedDoc, err := engine.RenderToDocument("employee_template", data)
-	if err != nil {
-		log.Fatalf("渲染员工模板失败: %v", err)
-	}
-
-	// 保存文档
-	err = renderedDoc.Save("examples/output/template_from_document_demo_r.docx")
-	if err != nil {
-		log.Fatalf("保存文档失败: %v", err)
-	}
-
-	fmt.Println("✓ 从文档创建模板演示完成，文档已保存为 template_from_document_demo_r.docx")
 }
 
 // demonstrateStructDataBinding 演示结构体数据绑定
